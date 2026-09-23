@@ -34,7 +34,30 @@ cd nuxt-template
 
 ### 2. Install dependencies
 
-This project uses `pnpm`, but you can use `npm` as well.
+This project uses `pnpm` for dependency management. Use `pnpm` to keep dependency versions consistent with the repository lockfile.
+
+First, make sure Node.js is installed and check whether `pnpm` is available:
+
+```bash
+node -v
+pnpm --version
+```
+
+If `pnpm` is not installed, enable it with `Corepack`:
+
+```bash
+corepack enable
+corepack prepare pnpm@latest --activate
+```
+
+On macOS, if corepack enable gives a permission error, run:
+
+```bash
+sudo corepack enable
+corepack prepare pnpm@latest --activate
+```
+
+After `pnpm` is available, install the project dependencies:
 
 ```bash
 pnpm install
