@@ -2,6 +2,9 @@ import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
 import { createSelectSchema, createInsertSchema } from 'drizzle-zod'
 import { relations } from 'drizzle-orm'
 
+import { user, session, account, verification } from '../../auth-schema'
+export { user, session, account, verification }
+
 // Setup tables and fill in information
 
 // reminder to append these contents to existing schema.ts file

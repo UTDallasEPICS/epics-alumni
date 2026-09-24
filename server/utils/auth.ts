@@ -4,6 +4,8 @@ import { db } from './db'
 import { env } from './env'
 import { emailOTP } from 'better-auth/plugins/email-otp'
 import nodemailer from 'nodemailer'
+import * as schema from '../db/schema'
+
 
 const transporter = nodemailer.createTransport({
   host: env.EMAIL_HOST,
@@ -18,6 +20,7 @@ const transporter = nodemailer.createTransport({
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'sqlite',
+    schema,
   }),
   plugins: [
     emailOTP({
