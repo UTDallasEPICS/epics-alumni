@@ -34,7 +34,7 @@ cd nuxt-template
 
 ### 2. Install dependencies
 
-This project uses `pnpm` for dependency management. Use `pnpm` to keep dependency versions consistent with the repository lockfile.
+This project uses `pnpm` for dependency management. Use `pnpm` to keep dependency versions consistent with the repository lockfile. Also, remember to use git-bash for these commands.
 
 First, make sure Node.js is installed and check whether `pnpm` is available:
 
