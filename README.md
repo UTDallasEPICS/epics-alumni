@@ -50,7 +50,7 @@ corepack enable
 corepack prepare pnpm@latest --activate
 ```
 
-On macOS, if corepack enable gives a permission error, run:
+On macOS, if corepack enable gives a permission error, run the follwing and enter you mac's password:
 
 ```bash
 sudo corepack enable
