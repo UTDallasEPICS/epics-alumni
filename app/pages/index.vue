@@ -79,7 +79,7 @@
   <UContainer class="py-10">
     <div class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
       <div>
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Dashboard</h1>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Landing Page</h1>
         <p class="mt-1 text-gray-500 dark:text-gray-400">
           Manage your application users and settings.
         </p>
