@@ -55,7 +55,7 @@
   <div class="flex h-full w-full items-center justify-center py-12">
     <UCard class="w-full max-w-md">
       <template #header>
-        <div class="flex items-center justify-center text-xl font-bold">Login</div>
+        <div class="flex items-center justify-center text-xl FreeMono, monospace">UTD Alumni Login</div>
       </template>
 
       <UForm :schema="schema" :state="state" @submit="handleSubmit" class="space-y-5">
@@ -74,7 +74,7 @@
         </UFormField>
 
         <UButton loading-auto type="submit" class="w-full justify-center">
-          {{ isEmailSent ? 'Login' : 'Send OTP' }}
+          {{ isEmailSent ? 'Login' : 'Send Text' }}
         </UButton>
       </UForm>
     </UCard>
