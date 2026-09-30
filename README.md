@@ -4,7 +4,7 @@ A modern, production-ready Nuxt 4 template featuring a robust authentication sys
 
 ## Features
 
-- **Nuxt 4**: The latest and greatest from the Nuxt team.
+- **Nuxt 4**: The latest and greatest from the Nuxt team. 
 - **Better Auth**: Comprehensive authentication with **Email OTP** support.
 - **Drizzle**: Type-safe ORM for interacting with the database.
 - **SQLite**: Lightweight, zero-configuration database, ideal for development and small-to-medium projects.
@@ -195,3 +195,5 @@ Before the GitHub Actions will work, you need:
 ## License
 
 MIT
+
+Rudra is working on the backend. 
