@@ -12,6 +12,20 @@ export const user = sqliteTable('user', {
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 })
 
+export const profile = sqliteTable('profile', {
+  userId: text('userId').primaryKey().references(() => user.id, { onDelete: 'cascade' }),
+  major: text('major'),
+  graduationYear: integer('graduationYear'),
+  company: text('company'),
+  jobTitle: text('jobTitle'),
+  bio: text('bio'),
+  linkedinUrl: text('linkedinUrl'),
+  githubUrl: text('githubUrl'),
+  websiteUrl: text('websiteUrl'),
+  createdAt: integer('createdAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+})
+
 export const session = sqliteTable('session', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   expiresAt: integer('expiresAt', { mode: 'timestamp' }).notNull(),
@@ -54,9 +68,14 @@ export const verification = sqliteTable('verification', {
   index('verification_identifier_idx').on(table.identifier),
 ])
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
+  profile: one(profile),
+}))
+
+export const profileRelations = relations(profile, ({ one }) => ({
+  user: one(user, { fields: [profile.userId], references: [user.id] }),
 }))
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -69,6 +88,8 @@ export const accountRelations = relations(account, ({ one }) => ({
 
 export const selectUserSchema = createSelectSchema(user)
 export const insertUserSchema = createInsertSchema(user)
+export const selectProfileSchema = createSelectSchema(profile)
+export const insertProfileSchema = createInsertSchema(profile)
 export const selectSessionSchema = createSelectSchema(session)
 export const insertSessionSchema = createInsertSchema(session)
 export const selectAccountSchema = createSelectSchema(account)
