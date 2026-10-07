@@ -154,7 +154,7 @@
         <div v-for="i in 3" :key="i" class="flex items-center justify-between py-2">
           <div class="flex w-full items-center gap-3">
             <USkeleton class="h-10 w-10 rounded-full" />
-            <div class="w-full max-w-[200px] space-y-2">
+            <div class="w-full max-w-50 space-y-2">
               <USkeleton class="h-4 w-full" />
               <USkeleton class="h-3 w-2/3" />
             </div>
