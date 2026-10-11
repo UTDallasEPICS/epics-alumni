@@ -4,7 +4,11 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { parse } from 'csv-parse/sync'
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import * as schema from './schema'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const connectionString = process.env.DATABASE_URL!.replace('file:', '')
 const sqlite = new Database(connectionString)
