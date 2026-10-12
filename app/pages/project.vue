@@ -42,6 +42,16 @@
 
     return (projects.value ?? []).filter((project) => project.semester === selectedSemester.value)
   })
+
+// Tracks if the modal is open
+const open = ref(false)
+// Holds the project that was selected and null when nothing selected
+const selected = ref<Project | null>(null)
+// When a project is clicked it will open the modal with the project's info
+function openProject(project: Project){
+  selected.value=project
+  open.value = true
+}
 </script>
 
 <template>
@@ -78,7 +88,7 @@
 
       <!-- Displays filtered projects in card grid. -->
       <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <UCard v-for="project in filteredProjects" :key="project.id">
+        <UCard v-for="project in filteredProjects" :key="project.id" class="cursor-pointer transition hover:ring-3 hover:ring-primary hover:bg-[#D9D9D9]" @click="openProject(project)">
           <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
             <UBadge color="neutral" variant="subtle">
               {{ project.semester }}
@@ -102,6 +112,37 @@
         </UCard>
       </div>
     </template>
+    <!-- makes an overlay with slightly more project details(students on the project.which is hardcoded for now). -->
+    <UModal
+      v-model:open="open"
+      :title="selected?.projectTitle"
+      :description="`${selected?.projectCategory} - ${selected?.semester} - ${selected?.status}`"
+    >
+      <template #body>
+        <div v-if="selected" class="space-y-4">
+          <h3 class="mb-1 text-base font-semibold">
+            Description:
+          </h3>
+
+          <p class="text-base leading-6">
+            {{ selected.description }}
+          </p>
+
+          <h4 class="mb-1 text-base font-semibold">
+            Student contributors:
+          </h4>
+          <!-- bulleted list of students. -->
+          <ul class="list-disc pl-5">
+            <li>First student</li>
+            <li>Second student</li>
+            <li>Third student</li>
+            <li>Fourth student</li>
+            <li>Fifth student</li>
+            <li>Sixth student</li>
+          </ul>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
 ```
