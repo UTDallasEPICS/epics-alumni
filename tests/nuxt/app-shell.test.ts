@@ -1,13 +1,8 @@
 // @vitest-environment nuxt
 //
-// A component test for the application shell (app/app.vue). It renders the real
-// component in the Nuxt environment, stubs out page routing, and proves the two
-// always-present pieces of the shell work: the brand link points home, and the
-// theme toggle is reachable by assistive technology.
-//
-// This test never opens the database, reads an env file, sends email, or makes a
-// network request. Those integrations are intentionally out of scope for the
-// baseline (see docs/testing.md).
+// Component tests for the application shell (app/app.vue).
+// The application shell now contains the shared EPICS navigation bar
+// and renders the current page through <NuxtPage />.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
@@ -17,9 +12,6 @@ describe('application shell (app.vue)', () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
-    // Arrange: watch the global fetch so each test can prove the shell renders
-    // without reaching the network. spyOn keeps the original implementation, so
-    // a real request would still be recorded (and fail the assertion below).
     fetchSpy = vi.spyOn(globalThis, 'fetch')
   })
 
@@ -27,28 +19,43 @@ describe('application shell (app.vue)', () => {
     fetchSpy.mockRestore()
   })
 
-  it('links the brand to the home route', async () => {
-    // Act: mount the shell, stubbing <NuxtPage /> so no page/route is loaded.
+  it('links the EPICS logo to the home route', async () => {
     const wrapper = await mountSuspended(App, {
-      global: { stubs: { NuxtPage: true } },
+      global: {
+        stubs: {
+          NuxtPage: true,
+        },
+      },
     })
 
-    // Assert: the brand link shows "Nuxt Template" and targets "/".
-    const brandLink = wrapper.get('a')
-    expect(brandLink.text()).toContain('Nuxt Template')
-    expect(brandLink.attributes('href')).toBe('/')
+    const homeLink = wrapper.find('a[href="/"]')
+
+    expect(homeLink.exists()).toBe(true)
+
+    const logo = homeLink.find('img[alt="EPICS logo"]')
+
+    expect(logo.exists()).toBe(true)
+    expect(logo.attributes('src')).toBe('/images/epics-logo.png')
+
     expect(fetchSpy).not.toHaveBeenCalled()
   })
 
-  it('exposes an accessible "Toggle Theme" control', async () => {
-    // Act
+  it('renders the shared navigation links', async () => {
     const wrapper = await mountSuspended(App, {
-      global: { stubs: { NuxtPage: true } },
+      global: {
+        stubs: {
+          NuxtPage: true,
+        },
+      },
     })
 
-    // Assert: the theme toggle is present and labelled for screen readers.
-    const toggle = wrapper.find('[aria-label="Toggle Theme"]')
-    expect(toggle.exists()).toBe(true)
+    expect(wrapper.find('[aria-label="Home"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="People"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="Projects"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="Messages"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="Notifications"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="Profile"]').exists()).toBe(true)
+
     expect(fetchSpy).not.toHaveBeenCalled()
   })
 })
