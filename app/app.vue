@@ -9,8 +9,6 @@
       colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
     },
   })
-
-  
 </script>
 
 <template>
