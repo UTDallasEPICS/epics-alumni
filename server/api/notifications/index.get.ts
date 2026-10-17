@@ -3,10 +3,7 @@
 // import { db } from '../../utils/db'
 // import { user } from '../../db/schema'
 
-// export default defineEventHandler(async (event) => {
-
-//     return[
-//         {id: 1, message: "Notification 1", read: false},
-//         {id: 2, message: "Notification 2", read: true},
-//     ]
-// })
+export default defineEventHandler(async (event) => {
+  console.log(event)
+  return [{ id: 1, message: 'Notification 1', read: false }]
+})
