@@ -19,65 +19,80 @@
     <!-- Navigation Icons -->
     <div class="nav-icons">
       <!-- Home -->
-      <NuxtLink to="/" class="nav-link" :class="{ active: route.path === '/' }" aria-label="Home">
-        <span class="icon home-icon"></span>
-      </NuxtLink>
+      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="Home">
+        <NuxtLink to="/" class="nav-link" :class="{ active: route.path === '/' }" aria-label="Home">
+          <span class="icon home-icon"></span>
+        </NuxtLink>
+      </UTooltip>
 
       <!-- People -->
-      <NuxtLink
-        to="/people"
-        class="nav-link"
-        :class="{ active: route.path.startsWith('/people') }"
-        aria-label="People"
-      >
-        <span class="icon people-icon"></span>
-      </NuxtLink>
+      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="People">
+        <NuxtLink
+          to="/people"
+          class="nav-link"
+          :class="{ active: route.path.startsWith('/people') }"
+          aria-label="People"
+        >
+          <span class="icon people-icon"></span>
+        </NuxtLink>
+      </UTooltip>
 
       <!-- Projects -->
-      <NuxtLink
-        to="/projects"
-        class="nav-link"
-        :class="{ active: route.path.startsWith('/projects') }"
-        aria-label="Projects"
-      >
-        <span class="icon projects-icon"></span>
-      </NuxtLink>
+      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="Projects">
+        <NuxtLink
+          to="/projects"
+          class="nav-link"
+          :class="{ active: route.path.startsWith('/projects') }"
+          aria-label="Projects"
+        >
+          <span class="icon projects-icon"></span>
+        </NuxtLink>
+      </UTooltip>
 
       <!-- Messages -->
-      <NuxtLink
-        to="/messages"
-        class="nav-link"
-        :class="{ active: route.path.startsWith('/messages') }"
-        aria-label="Messages"
-      >
-        <span class="icon chat-icon"></span>
-      </NuxtLink>
+      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="Messages">
+        <NuxtLink
+          to="/messages"
+          class="nav-link"
+          :class="{ active: route.path.startsWith('/messages') }"
+          aria-label="Messages"
+        >
+          <span class="icon chat-icon"></span>
+        </NuxtLink>
+      </UTooltip>
 
       <!-- Notifications -->
-      <NuxtLink
-        to="/notifications"
-        class="nav-link"
-        :class="{ active: route.path.startsWith('/notifications') }"
-        aria-label="Notifications"
-      >
-        <span class="icon notification-icon"></span>
-      </NuxtLink>
+      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="Notifications">
+        <NuxtLink
+          to="/notifications"
+          class="nav-link"
+          :class="{ active: route.path.startsWith('/notifications') }"
+          aria-label="Notifications"
+        >
+          <span class="icon notification-icon"></span>
+        </NuxtLink>
+      </UTooltip>
 
       <!-- Profile -->
-      <NuxtLink
-        to="/profile"
-        class="nav-link"
-        :class="{ active: route.path.startsWith('/profile') }"
-        aria-label="Profile"
-      >
-        <span class="icon profile-icon"></span>
-      </NuxtLink>
+      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="Profile">
+        <NuxtLink
+          to="/profile"
+          class="nav-link"
+          :class="{ active: route.path.startsWith('/profile') }"
+          aria-label="Profile"
+        >
+          <span class="icon profile-icon"></span>
+        </NuxtLink>
+      </UTooltip>
     </div>
   </nav>
 </template>
 
 <style scoped>
   .navbar {
+    position: sticky;
+    top: 0;
+
     width: 100%;
     height: 86px;
     background-color: #154734;
