@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import { authClient } from '../utils/auth-client'
+import { profileUpdateSchema, type ProfileResponse } from '../../shared/profile'
 
 type ProfileRole = 'Alum' | 'Admin' | 'Mentor' | 'Student'
-
-interface ExistingUser {
-  id: string
-  name: string
-  email: string
-  image: boolean
-  emailVerified: boolean
-}
 
 interface ProfileProject {
   id?: string
@@ -18,27 +11,10 @@ interface ProfileProject {
   featured: boolean
 }
 
-interface Profile {
-  id: string
-  name: string
-  email: string
-  graduationYear: string
-  biography: string
+interface Profile extends ProfileResponse {
   roles: ProfileRole[]
-  imageUrl: string | null
   projects: ProfileProject[]
 }
-
-/*
- * Leave this false while using the existing /api/users API.
- *
- * Change it to true when the backend creates:
- *
- * GET  /api/profile
- * PUT  /api/profile
- * POST /api/profile/avatar
- */
-const PROFILE_API_READY = false
 
 const toast = useToast()
 
@@ -98,40 +74,13 @@ function copyProjects(projects: ProfileProject[]) {
   }))
 }
 
-/*
- * This function works with your existing /api/users route now.
- *
- * Later, when PROFILE_API_READY is true, it will use
- * GET /api/profile instead.
- */
 async function loadProfile() {
   pending.value = true
   errorMessage.value = ''
 
   try {
-    if (PROFILE_API_READY) {
-      profile.value = await $fetch<Profile>('/api/profile')
-    } else {
-      const users = await $fetch<ExistingUser[]>('/api/users')
-      const user = users[0]
-
-      if (!user) {
-        throw new Error('No user profile was found.')
-      }
-
-      profile.value = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        graduationYear: '',
-        biography: '',
-        roles: ['Alum'],
-        imageUrl: user.image
-          ? `/api/users/${user.id}/profile`
-          : null,
-        projects: [],
-      }
-    }
+    const response = await $fetch<ProfileResponse>('/api/profile')
+    profile.value = { ...response, roles: [], projects: [] }
   } catch (error) {
     console.error('Unable to load profile:', error)
 
@@ -197,10 +146,10 @@ function handleImageUpload(event: Event) {
     return
   }
 
-  if (!file.type.startsWith('image/')) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
     toast.add({
       title: 'Invalid file',
-      description: 'Please select an image file.',
+      description: 'Please select a JPEG, PNG, or WebP image.',
       color: 'error',
     })
 
@@ -222,6 +171,7 @@ function handleImageUpload(event: Event) {
   const reader = new FileReader()
 
   reader.onload = (loadEvent) => {
+    if (selectedFile.value !== file || !isEditing.value) return
     imagePreview.value =
       loadEvent.target?.result as string
   }
@@ -237,23 +187,15 @@ async function uploadProfilePicture() {
   const formData = new FormData()
   formData.append('file', selectedFile.value)
 
-  /*
-   * Uses the current upload route until the new profile API
-   * is available.
-   */
-  const endpoint = PROFILE_API_READY
-    ? '/api/profile/avatar'
-    : '/api/users/upload'
-
-  const response = await $fetch<{ imageUrl?: string }>(
-    endpoint,
+  const response = await $fetch<{ imageUrl: string }>(
+    '/api/users/upload',
     {
       method: 'POST',
       body: formData,
     },
   )
 
-  return response?.imageUrl || imagePreview.value
+  return response.imageUrl
 }
 
 async function saveProfile() {
@@ -261,68 +203,35 @@ async function saveProfile() {
     return
   }
 
-  if (!form.name.trim()) {
+  if (isSaving.value) return
+  const parsed = profileUpdateSchema.safeParse({
+    name: form.name,
+    graduationYear: form.graduationYear,
+    biography: form.biography,
+  })
+  if (!parsed.success) {
     toast.add({
-      title: 'Name required',
-      description: 'Please enter your name.',
+      title: 'Check your profile',
+      description: parsed.error.issues[0]?.message || 'Please check the profile fields.',
       color: 'error',
     })
-
-    return
-  }
-
-  if (!form.email.trim()) {
-    toast.add({
-      title: 'Email required',
-      description: 'Please enter your email address.',
-      color: 'error',
-    })
-
     return
   }
 
   isSaving.value = true
+  let textSaved = false
 
   try {
-    const imageUrl = await uploadProfilePicture()
+    const updatedProfile = await $fetch<ProfileResponse>('/api/profile', {
+      method: 'PUT',
+      body: parsed.data,
+    })
+    profile.value = { ...profile.value, ...updatedProfile }
+    textSaved = true
 
-    const update = {
-      name: form.name.trim(),
-      email: form.email.trim(),
-      graduationYear: form.graduationYear.trim(),
-      biography: form.biography.trim(),
-      projects: form.projects.map((project) => ({
-        id: project.id,
-        name: project.name.trim(),
-        contribution: project.contribution.trim(),
-        featured: project.featured,
-      })),
-    }
-
-    if (PROFILE_API_READY) {
-      /*
-       * The backend should determine the user from the
-       * authenticated session.
-       */
-      const updatedProfile = await $fetch<Profile>(
-        '/api/profile',
-        {
-          method: 'PUT',
-          body: update,
-        },
-      )
-
-      profile.value = updatedProfile
-    } else {
-      /*
-       * Temporary frontend behavior until the backend profile
-       * API is available.
-       */
-      profile.value = {
-        ...profile.value,
-        ...update,
-        imageUrl,
-      }
+    // Text and avatar use separate endpoints. Report partial success explicitly.
+    if (selectedFile.value) {
+      profile.value.imageUrl = await uploadProfilePicture()
     }
 
     selectedFile.value = null
@@ -331,17 +240,15 @@ async function saveProfile() {
 
     toast.add({
       title: 'Profile saved',
-      description: PROFILE_API_READY
-        ? 'Your profile was updated successfully.'
-        : 'The profile was updated temporarily.',
+      description: 'Your profile was updated successfully.',
       color: 'success',
     })
-  } catch (error) {
-    console.error('Unable to save profile:', error)
-
+  } catch {
     toast.add({
-      title: 'Unable to save profile',
-      description: 'Please try again.',
+      title: textSaved ? 'Profile saved, image upload failed' : 'Unable to save profile',
+      description: textSaved
+        ? 'Your text changes were saved. Please retry the image upload.'
+        : 'Your changes were not saved. Please try again.',
       color: 'error',
     })
   } finally {
@@ -484,6 +391,7 @@ onMounted(loadProfile)
 
             <UInput
               v-model="form.email"
+              readonly
               type="email"
               placeholder="name@example.com"
               size="xl"
@@ -512,7 +420,8 @@ onMounted(loadProfile)
 
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
+                :disabled="isSaving"
                 @change="handleImageUpload"
               />
             </label>
@@ -526,12 +435,14 @@ onMounted(loadProfile)
           </div>
 
           <section class="project-editor">
+            <p class="text-gray-500">Project editing is not available yet.</p>
             <div class="section-heading">
               <h2>Projects</h2>
 
               <UButton
                 color="success"
                 variant="soft"
+                disabled
                 @click="addProject"
               >
                 Add project
@@ -553,6 +464,7 @@ onMounted(loadProfile)
                   <button
                     type="button"
                     class="font-semibold text-red-600"
+                    disabled
                     @click="removeProject(index)"
                   >
                     Remove
@@ -564,6 +476,7 @@ onMounted(loadProfile)
 
                   <UInput
                     v-model="project.name"
+                    disabled
                     placeholder="Enter the project name"
                     class="w-full"
                   />
@@ -574,6 +487,7 @@ onMounted(loadProfile)
 
                   <UTextarea
                     v-model="project.contribution"
+                    disabled
                     placeholder="Describe your contribution"
                     :rows="3"
                     class="w-full"
@@ -584,6 +498,7 @@ onMounted(loadProfile)
                   <input
                     type="radio"
                     name="featured-project"
+                    disabled
                     :checked="project.featured"
                     @change="makeFeatured(index)"
                   />
@@ -620,7 +535,7 @@ onMounted(loadProfile)
 
         <template v-else>
           <section class="profile-information">
-            <!-- Roles are supplied by the backend. -->
+            <!-- Roles are not assigned by this profile API. -->
             <div
               v-if="profile.roles.length"
               class="role-list"
