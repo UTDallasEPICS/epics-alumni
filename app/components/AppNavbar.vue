@@ -11,7 +11,7 @@
 
     <!-- Search -->
     <div class="search">
-      <span class="search-icon">⌕</span>
+      <span class="material-symbols-outlined search-icon"> search </span>
 
       <input type="text" placeholder="Search" />
     </div>
@@ -20,7 +20,7 @@
     <div class="nav-icons">
       <!-- Home -->
       <NuxtLink to="/" class="nav-link" :class="{ active: route.path === '/' }" aria-label="Home">
-        <span class="icon home-icon"></span>
+        <span class="material-symbols-outlined"> home </span>
       </NuxtLink>
 
       <!-- People -->
@@ -30,7 +30,7 @@
         :class="{ active: route.path.startsWith('/people') }"
         aria-label="People"
       >
-        <span class="icon people-icon"></span>
+        <span class="material-symbols-outlined"> group </span>
       </NuxtLink>
 
       <!-- Projects -->
@@ -40,7 +40,7 @@
         :class="{ active: route.path.startsWith('/projects') }"
         aria-label="Projects"
       >
-        <span class="icon projects-icon"></span>
+        <span class="material-symbols-outlined"> folder </span>
       </NuxtLink>
 
       <!-- Messages -->
@@ -50,7 +50,7 @@
         :class="{ active: route.path.startsWith('/messages') }"
         aria-label="Messages"
       >
-        <span class="icon chat-icon"></span>
+        <span class="material-symbols-outlined"> chat </span>
       </NuxtLink>
 
       <!-- Notifications -->
@@ -60,7 +60,7 @@
         :class="{ active: route.path.startsWith('/notifications') }"
         aria-label="Notifications"
       >
-        <span class="icon notification-icon"></span>
+        <span class="material-symbols-outlined"> notifications </span>
       </NuxtLink>
 
       <!-- Profile -->
@@ -70,7 +70,7 @@
         :class="{ active: route.path.startsWith('/profile') }"
         aria-label="Profile"
       >
-        <span class="icon profile-icon"></span>
+        <span class="material-symbols-outlined"> account_circle </span>
       </NuxtLink>
     </div>
   </nav>
@@ -162,7 +162,14 @@
 
     text-decoration: none;
 
-    transition: color 0.2s ease;
+    transition:
+      color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: white;
+    transform: translateY(-1px);
   }
 
   /* Active page color */
@@ -171,53 +178,26 @@
     color: #5fe0b7;
   }
 
-  /* Icons */
+  /* Google Material Symbols */
 
-  .icon {
-    display: block;
+  .material-symbols-outlined {
+    font-size: 32px;
 
-    width: 32px;
-    height: 32px;
-
-    background-color: currentColor;
-
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: contain;
-
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    -webkit-mask-size: contain;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 32;
   }
 
-  .home-icon {
-    mask-image: url('/images/home-icon.svg');
-    -webkit-mask-image: url('/images/home-icon.svg');
-  }
+  /* Fill active icon */
 
-  .people-icon {
-    mask-image: url('/images/people-icon.svg');
-    -webkit-mask-image: url('/images/people-icon.svg');
-  }
-
-  .projects-icon {
-    mask-image: url('/images/projects-icon.svg');
-    -webkit-mask-image: url('/images/projects-icon.svg');
-  }
-
-  .chat-icon {
-    mask-image: url('/images/chat-icon.svg');
-    -webkit-mask-image: url('/images/chat-icon.svg');
-  }
-
-  .notification-icon {
-    mask-image: url('/images/notification-icon.svg');
-    -webkit-mask-image: url('/images/notification-icon.svg');
-  }
-
-  .profile-icon {
-    mask-image: url('/images/profile-icon.svg');
-    -webkit-mask-image: url('/images/profile-icon.svg');
+  .nav-link.active .material-symbols-outlined {
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 32;
   }
 
   /* Smaller screens */
@@ -240,9 +220,8 @@
       gap: 14px;
     }
 
-    .icon {
-      width: 28px;
-      height: 28px;
+    .material-symbols-outlined {
+      font-size: 28px;
     }
   }
 </style>
