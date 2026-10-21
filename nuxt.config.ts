@@ -4,6 +4,18 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/eslint'],
   css: ['./assets/css/main.css'],
+
+  app: {
+    head: {
+      link: [
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0',
+        },
+      ],
+    },
+  },
+
   // Prettier owns formatting; ESLint handles logic only (no stylistic rules).
   eslint: {
     config: {
