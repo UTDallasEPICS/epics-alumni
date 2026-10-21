@@ -1,5 +1,16 @@
 <script setup lang="ts">
   const route = useRoute()
+  const { searchQuery } = useProjectSearch()
+
+  // Navigate to the Projects page and apply the search.
+  function submitSearch() {
+    const query = searchQuery.value.trim()
+
+    navigateTo({
+      path: '/projects',
+      query: query ? { search: query } : {},
+    })
+  }
 </script>
 
 <template>
@@ -9,24 +20,31 @@
       <img src="/images/epics-logo.png" alt="EPICS logo" class="logo" />
     </NuxtLink>
 
-    <!-- Search -->
-    <div class="search">
-      <span class="search-icon">⌕</span>
+    <!-- Functional Search -->
+    <form class="search" @submit.prevent="submitSearch">
+      <button type="submit" class="search-button" aria-label="Search projects">
+        <span class="search-icon">⌕</span>
+      </button>
 
-      <input type="text" placeholder="Search" />
-    </div>
+      <input
+        v-model="searchQuery"
+        type="search"
+        placeholder="Search projects..."
+        aria-label="Search projects"
+      />
+    </form>
 
     <!-- Navigation Icons -->
     <div class="nav-icons">
       <!-- Home -->
-      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="Home">
+      <UTooltip :content="{ align: 'center', side: 'bottom', sideOffset: 3 }" text="Home">
         <NuxtLink to="/" class="nav-link" :class="{ active: route.path === '/' }" aria-label="Home">
           <span class="icon home-icon"></span>
         </NuxtLink>
       </UTooltip>
 
       <!-- People -->
-      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="People">
+      <UTooltip :content="{ align: 'center', side: 'bottom', sideOffset: 3 }" text="People">
         <NuxtLink
           to="/people"
           class="nav-link"
@@ -38,7 +56,7 @@
       </UTooltip>
 
       <!-- Projects -->
-      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="Projects">
+      <UTooltip :content="{ align: 'center', side: 'bottom', sideOffset: 3 }" text="Projects">
         <NuxtLink
           to="/projects"
           class="nav-link"
@@ -50,7 +68,7 @@
       </UTooltip>
 
       <!-- Messages -->
-      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="Messages">
+      <UTooltip :content="{ align: 'center', side: 'bottom', sideOffset: 3 }" text="Messages">
         <NuxtLink
           to="/messages"
           class="nav-link"
@@ -61,8 +79,8 @@
         </NuxtLink>
       </UTooltip>
 
-      <!-- Notifications -->
-      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="Notifications">
+      <!-- Notifs -->
+      <UTooltip :content="{ align: 'center', side: 'bottom', sideOffset: 3 }" text="Notifications">
         <NuxtLink
           to="/notifications"
           class="nav-link"
@@ -74,7 +92,7 @@
       </UTooltip>
 
       <!-- Profile -->
-      <UTooltip :content="{align: 'center', side: 'bottom', sideOffset: 3}" text="Profile">
+      <UTooltip :content="{ align: 'center', side: 'bottom', sideOffset: 3 }" text="Profile">
         <NuxtLink
           to="/profile"
           class="nav-link"
@@ -92,6 +110,7 @@
   .navbar {
     position: sticky;
     top: 0;
+    z-index: 50;
 
     width: 100%;
     height: 86px;
@@ -102,29 +121,27 @@
 
     padding: 0 48px;
     box-sizing: border-box;
-
     gap: 28px;
   }
 
   /* Logo */
-
   .logo-link {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
   }
 
   .logo {
     width: 100px;
     height: auto;
-    flex-shrink: 0;
   }
 
   /* Search */
-
   .search {
     flex: 1;
     max-width: 650px;
     height: 48px;
+    min-width: 0;
 
     display: flex;
     align-items: center;
@@ -136,13 +153,27 @@
     box-sizing: border-box;
   }
 
+  .search-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
   .search-icon {
     color: #dfe9e4;
     font-size: 28px;
+    line-height: 1;
   }
 
   .search input {
     width: 100%;
+    min-width: 0;
 
     background: transparent;
     border: none;
@@ -158,14 +189,17 @@
     color: #dfe9e4;
   }
 
-  /* Navigation */
+  .search input::-webkit-search-cancel-button {
+    cursor: pointer;
+  }
 
+  /* Nav */
   .nav-icons {
     display: flex;
     align-items: center;
     gap: 22px;
-
     margin-left: auto;
+    flex-shrink: 0;
   }
 
   .nav-link {
@@ -174,20 +208,17 @@
     justify-content: center;
 
     color: #dfe9e4;
-
     text-decoration: none;
 
     transition: color 0.2s ease;
   }
 
-  /* Active page color */
-
+  /* active page color */
   .nav-link.active {
     color: #5fe0b7;
   }
 
-  /* Icons */
-
+  /* icons */
   .icon {
     display: block;
 
@@ -235,8 +266,7 @@
     -webkit-mask-image: url('/images/profile-icon.svg');
   }
 
-  /* Smaller screens */
-
+  /* smaller screens like mobile */
   @media (max-width: 900px) {
     .navbar {
       padding: 0 20px;
@@ -258,6 +288,40 @@
     .icon {
       width: 28px;
       height: 28px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .navbar {
+      padding: 0 12px;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 58px;
+    }
+
+    .search {
+      height: 40px;
+      padding: 0 10px;
+    }
+
+    .nav-icons {
+      gap: 10px;
+    }
+
+    .icon {
+      width: 23px;
+      height: 23px;
+    }
+
+    .search-icon {
+      font-size: 23px;
+    }
+
+    .search input {
+      font-size: 14px;
+      margin-left: 6px;
     }
   }
 </style>
