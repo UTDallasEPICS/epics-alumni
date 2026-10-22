@@ -1,6 +1,6 @@
 # Nuxt Template (Better Auth + Drizzle + SQLite)
 
-A modern, production-ready Nuxt 4 template featuring a robust authentication system, ORM integration, and a clean UI foundation.
+A modern, production-ready Nuxt 4 template featuring a robust authentication system, ORM integration, and a clean UI foundation. Test
 
 ## Features
 
