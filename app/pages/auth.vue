@@ -162,23 +162,17 @@ function changeEmail() {
   display: grid;
   place-items: center;
   padding: 32px 20px;
-  background:
-    radial-gradient(
-      circle at 12% 14%,
-      rgb(255 255 255 / 8%) 0 1px,
-      transparent 2px
-    ) 0 0 / 34px 34px,
-    linear-gradient(145deg, #0b382b, #124f3d);
+  background-color: #154734;
 }
 
-/* CHANGE THE CARD BACKGROUND HERE */
+
+
 .login-card {
   width: min(100%, 430px);
   padding: 44px 42px 36px;
   border: 1px solid rgba(0, 0, 0, 0.55);
   border-radius: 18px;
   background: #ffffff;
-  box-shadow: 0 28px 70px rgb(0 0 0 / 25%);
 }
 
 /* EPICS logo */

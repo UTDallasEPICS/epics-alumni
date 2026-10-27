@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { authClient } from '../utils/auth-client'
-import { profileUpdateSchema, type ProfileResponse } from '../../shared/profile'
+import {
+  profileUpdateSchema,
+  type ProfileResponse,
+} from '../../shared/profile'
 
-type ProfileRole = 'Alum' | 'Admin' | 'Mentor' | 'Student'
+type ProfileRole =
+  | 'Alum'
+  | 'Admin'
+  | 'Mentor'
+  | 'Student'
 
 interface ProfileProject {
   id?: string
@@ -79,8 +86,14 @@ async function loadProfile() {
   errorMessage.value = ''
 
   try {
-    const response = await $fetch<ProfileResponse>('/api/profile')
-    profile.value = { ...response, roles: [], projects: [] }
+    const response =
+      await $fetch<ProfileResponse>('/api/profile')
+
+    profile.value = {
+      ...response,
+      roles: [],
+      projects: [],
+    }
   } catch (error) {
     console.error('Unable to load profile:', error)
 
@@ -146,10 +159,17 @@ function handleImageUpload(event: Event) {
     return
   }
 
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+  const allowedTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+  ]
+
+  if (!allowedTypes.includes(file.type)) {
     toast.add({
       title: 'Invalid file',
-      description: 'Please select a JPEG, PNG, or WebP image.',
+      description:
+        'Please select a JPEG, PNG, or WebP image.',
       color: 'error',
     })
 
@@ -159,7 +179,8 @@ function handleImageUpload(event: Event) {
   if (file.size > 5 * 1024 * 1024) {
     toast.add({
       title: 'Image is too large',
-      description: 'The image must be smaller than 5 MB.',
+      description:
+        'The image must be smaller than 5 MB.',
       color: 'error',
     })
 
@@ -171,7 +192,13 @@ function handleImageUpload(event: Event) {
   const reader = new FileReader()
 
   reader.onload = (loadEvent) => {
-    if (selectedFile.value !== file || !isEditing.value) return
+    if (
+      selectedFile.value !== file ||
+      !isEditing.value
+    ) {
+      return
+    }
+
     imagePreview.value =
       loadEvent.target?.result as string
   }
@@ -187,34 +214,36 @@ async function uploadProfilePicture() {
   const formData = new FormData()
   formData.append('file', selectedFile.value)
 
-  const response = await $fetch<{ imageUrl: string }>(
-    '/api/users/upload',
-    {
-      method: 'POST',
-      body: formData,
-    },
-  )
+  const response = await $fetch<{
+    imageUrl: string
+  }>('/api/users/upload', {
+    method: 'POST',
+    body: formData,
+  })
 
   return response.imageUrl
 }
 
 async function saveProfile() {
-  if (!profile.value) {
+  if (!profile.value || isSaving.value) {
     return
   }
 
-  if (isSaving.value) return
   const parsed = profileUpdateSchema.safeParse({
     name: form.name,
     graduationYear: form.graduationYear,
     biography: form.biography,
   })
+
   if (!parsed.success) {
     toast.add({
       title: 'Check your profile',
-      description: parsed.error.issues[0]?.message || 'Please check the profile fields.',
+      description:
+        parsed.error.issues[0]?.message ||
+        'Please check the profile fields.',
       color: 'error',
     })
+
     return
   }
 
@@ -222,16 +251,25 @@ async function saveProfile() {
   let textSaved = false
 
   try {
-    const updatedProfile = await $fetch<ProfileResponse>('/api/profile', {
-      method: 'PUT',
-      body: parsed.data,
-    })
-    profile.value = { ...profile.value, ...updatedProfile }
+    const updatedProfile =
+      await $fetch<ProfileResponse>(
+        '/api/profile',
+        {
+          method: 'PUT',
+          body: parsed.data,
+        },
+      )
+
+    profile.value = {
+      ...profile.value,
+      ...updatedProfile,
+    }
+
     textSaved = true
 
-    // Text and avatar use separate endpoints. Report partial success explicitly.
     if (selectedFile.value) {
-      profile.value.imageUrl = await uploadProfilePicture()
+      profile.value.imageUrl =
+        await uploadProfilePicture()
     }
 
     selectedFile.value = null
@@ -240,12 +278,15 @@ async function saveProfile() {
 
     toast.add({
       title: 'Profile saved',
-      description: 'Your profile was updated successfully.',
+      description:
+        'Your profile was updated successfully.',
       color: 'success',
     })
   } catch {
     toast.add({
-      title: textSaved ? 'Profile saved, image upload failed' : 'Unable to save profile',
+      title: textSaved
+        ? 'Profile saved, image upload failed'
+        : 'Unable to save profile',
       description: textSaved
         ? 'Your text changes were saved. Please retry the image upload.'
         : 'Your changes were not saved. Please try again.',
@@ -262,15 +303,7 @@ onMounted(loadProfile)
 <template>
   <main class="profile-page">
     <UContainer class="max-w-6xl py-8">
-      <nav class="mb-6 flex items-center justify-between">
-        <NuxtLink to="/" class="epics-logo">
-          <span class="logo-orange">E</span>
-          <span class="logo-yellow">P</span>
-          <span class="logo-green">I</span>
-          <span class="logo-teal">C</span>
-          <span class="logo-blue">S</span>
-        </NuxtLink>
-
+      <nav class="mb-6 flex justify-end">
         <UButton
           color="error"
           variant="soft"
@@ -281,10 +314,12 @@ onMounted(loadProfile)
 
       <div
         v-if="pending"
-        class="rounded-3xl bg-[#f8f8f4] p-12"
+        class="loading-card"
       >
         <div class="flex items-center gap-8">
-          <USkeleton class="h-36 w-36 rounded-full" />
+          <USkeleton
+            class="h-36 w-36 rounded-full"
+          />
 
           <div class="w-full space-y-4">
             <USkeleton class="h-10 w-64" />
@@ -321,10 +356,6 @@ onMounted(loadProfile)
             </div>
 
             <div v-if="!isEditing">
-              <p class="eyebrow">
-                EPICS alumni profile
-              </p>
-
               <h1>{{ profile.name }}</h1>
 
               <p class="class-year">
@@ -336,7 +367,10 @@ onMounted(loadProfile)
               </p>
             </div>
 
-            <div v-else class="identity-form">
+            <div
+              v-else
+              class="identity-form"
+            >
               <label class="field-label">
                 Full name
 
@@ -435,7 +469,10 @@ onMounted(loadProfile)
           </div>
 
           <section class="project-editor">
-            <p class="text-gray-500">Project editing is not available yet.</p>
+            <p class="text-gray-500">
+              Project editing is not available yet.
+            </p>
+
             <div class="section-heading">
               <h2>Projects</h2>
 
@@ -459,7 +496,9 @@ onMounted(loadProfile)
                 class="project-form"
               >
                 <div class="flex justify-between">
-                  <strong>Project {{ index + 1 }}</strong>
+                  <strong>
+                    Project {{ index + 1 }}
+                  </strong>
 
                   <button
                     type="button"
@@ -508,7 +547,10 @@ onMounted(loadProfile)
               </article>
             </div>
 
-            <p v-else class="text-gray-500">
+            <p
+              v-else
+              class="projects-empty"
+            >
               No projects have been added.
             </p>
           </section>
@@ -535,7 +577,6 @@ onMounted(loadProfile)
 
         <template v-else>
           <section class="profile-information">
-            <!-- Roles are not assigned by this profile API. -->
             <div
               v-if="profile.roles.length"
               class="role-list"
@@ -550,7 +591,10 @@ onMounted(loadProfile)
               </span>
             </div>
 
-            <p v-else class="text-gray-500">
+            <p
+              v-else
+              class="roles-empty"
+            >
               No roles have been assigned.
             </p>
 
@@ -562,11 +606,10 @@ onMounted(loadProfile)
             </p>
           </section>
 
-          <section class="projects-section">
-            <p class="eyebrow">
-              Work and contributions
-            </p>
-
+          <section
+            class="projects-section"
+            style="background-color: #f3f4f3"
+          >
             <h2>Projects</h2>
 
             <div
@@ -578,7 +621,8 @@ onMounted(loadProfile)
                 :key="project.id || project.name"
                 class="project-card"
                 :class="{
-                  'featured-project': project.featured,
+                  'featured-project':
+                    project.featured,
                 }"
               >
                 <span class="project-type">
@@ -595,7 +639,10 @@ onMounted(loadProfile)
               </article>
             </div>
 
-            <p v-else class="text-gray-500">
+            <p
+              v-else
+              class="projects-empty"
+            >
               No projects have been added.
             </p>
           </section>
@@ -606,51 +653,53 @@ onMounted(loadProfile)
 </template>
 
 <style scoped>
+@import url("https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap");
+
+/*
+ * Plain page background:
+ * no gradient, background image, or shadow.
+ */
 .profile-page {
   min-height: 100vh;
-  background:
-    radial-gradient(
-      circle at 12% 14%,
-      rgb(255 255 255 / 7%) 0 2px,
-      transparent 3px
-    ) 0 0 / 38px 38px,
-    linear-gradient(145deg, #0b382b, #124f3d);
-  font-family: "Avenir Next", Avenir, sans-serif;
+  background: #f5f5f5;
+  background-image: none;
+  font-family: "Public Sans", sans-serif;
 }
 
-.epics-logo {
-  font-family: Georgia, serif;
-  font-size: 2.4rem;
-  font-weight: 900;
-  letter-spacing: -0.12em;
-  text-decoration: none;
+/*
+ * Prevent a different background from appearing
+ * behind the profile page.
+ */
+:global(html),
+:global(body),
+:global(#__nuxt) {
+  min-height: 100%;
+  margin: 0;
+  background: #f5f5f5;
+  background-image: none;
 }
 
-.logo-orange {
-  color: #ee8c2d;
+.loading-card {
+  padding: 48px;
+  border: 1px solid #000000;
+  border-radius: 25px;
+  background: #f5f5f5;
+  background-image: none;
+  box-shadow: none;
 }
 
-.logo-yellow {
-  color: #e5b62f;
-}
-
-.logo-green {
-  color: #76a744;
-}
-
-.logo-teal {
-  color: #2f9c83;
-}
-
-.logo-blue {
-  color: #287aad;
-}
-
+/*
+ * Main profile card:
+ * flat background with no shadow or gradient.
+ */
 .profile-card {
   overflow: hidden;
-  border-radius: 30px;
-  background: #f8f8f4;
-  box-shadow: 0 30px 80px rgb(0 0 0 / 24%);
+  border: 1px solid #000000;
+  border-radius: 25px;
+  background: #f5f5f5;
+  background-image: none;
+  box-shadow: none;
+  filter: none;
 }
 
 .profile-header {
@@ -674,11 +723,13 @@ onMounted(loadProfile)
   flex-shrink: 0;
   place-items: center;
   overflow: hidden;
-  border: 5px solid white;
+  border: 5px solid #ffffff;
   border-radius: 50%;
-  background: #e9eeeb;
-  color: #124f3d;
-  font-family: Georgia, serif;
+  background: #eeeeee;
+  background-image: none;
+  box-shadow: none;
+  color: #000000;
+  font-family: "Public Sans", sans-serif;
   font-size: 3.5rem;
   font-weight: 700;
 }
@@ -689,27 +740,25 @@ onMounted(loadProfile)
   object-fit: cover;
 }
 
-.eyebrow {
-  margin: 0 0 8px;
-  color: #bd531f;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
+/* Profile name */
 .profile-header h1 {
   margin: 0;
-  color: #12251f;
-  font-family: Georgia, serif;
-  font-size: clamp(2.6rem, 5vw, 4.4rem);
-  line-height: 1;
+  color: #000000;
+  font-family: "Public Sans", sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0;
 }
 
+/* Graduation year */
 .class-year {
-  margin: 14px 0 0;
-  color: #78837f;
-  font-size: 1.4rem;
+  margin: 8px 0 0;
+  color: rgb(0 0 0 / 46%);
+  font-family: "Public Sans", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.25;
 }
 
 .identity-form {
@@ -732,20 +781,29 @@ onMounted(loadProfile)
   padding: 14px 24px;
   border: 0;
   border-radius: 14px;
+  box-shadow: none;
   cursor: pointer;
-  font: inherit;
-  font-weight: 750;
+  font-family: "Public Sans", sans-serif;
+  font-weight: 700;
   text-decoration: none;
 }
 
 .contact-button {
   background: #ec7100;
-  color: white;
+  color: #ffffff;
+}
+
+.contact-button:hover {
+  background: #c95f00;
 }
 
 .edit-button {
   background: #e2e9e5;
   color: #124f3d;
+}
+
+.edit-button:hover {
+  background: #d7e2db;
 }
 
 .profile-information,
@@ -758,12 +816,19 @@ onMounted(loadProfile)
   gap: 28px;
 }
 
+.roles-empty {
+  margin: 0 0 10px;
+  color: #64748b;
+  font-size: 16px;
+}
+
 .field-label {
   display: grid;
   gap: 8px;
   color: #12251f;
+  font-family: "Public Sans", sans-serif;
   font-size: 0.9rem;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .file-selector {
@@ -774,9 +839,12 @@ onMounted(loadProfile)
   border: 2px dashed #95a69f;
   border-radius: 14px;
   background: #f0f3f1;
+  background-image: none;
+  box-shadow: none;
   color: #124f3d;
   cursor: pointer;
-  font-weight: 750;
+  font-family: "Public Sans", sans-serif;
+  font-weight: 700;
 }
 
 .file-selector input {
@@ -797,7 +865,9 @@ onMounted(loadProfile)
   min-width: 110px;
   padding: 9px 20px;
   border-radius: 999px;
-  font-weight: 800;
+  box-shadow: none;
+  font-family: "Public Sans", sans-serif;
+  font-weight: 700;
   text-align: center;
 }
 
@@ -821,32 +891,49 @@ onMounted(loadProfile)
   color: #087b53;
 }
 
+/* Biography */
 .biography {
-  max-width: 900px;
+  max-width: 100%;
   margin: 0;
-  color: #253732;
-  font-size: 1.2rem;
-  line-height: 1.7;
+  color: #000000;
+  font-family: "Public Sans", sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
 }
 
-.projects-section,
-.project-editor {
+/*
+ * Main Projects area:
+ * flat #F3F4F3 background.
+ */
+.projects-section {
   margin: 0 34px 34px;
   padding: 38px;
-  border-radius: 24px;
-  background: #edf0ed;
+  border-radius: 25px;
+  background: #f3f4f3 !important;
+  background-image: none !important;
+  box-shadow: none;
+  filter: none;
 }
 
 .project-editor {
   margin: 0;
+  padding: 38px;
+  border-radius: 25px;
+  background: #f3f4f3;
+  background-image: none;
+  box-shadow: none;
 }
 
 .projects-section h2,
 .project-editor h2 {
   margin: 0;
-  color: #12251f;
-  font-family: Georgia, serif;
-  font-size: 2rem;
+  color: #000000;
+  font-family: "Public Sans", sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .section-heading {
@@ -859,43 +946,68 @@ onMounted(loadProfile)
 
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
   gap: 18px;
   margin-top: 24px;
 }
 
+/*
+ * Regular project card.
+ */
 .project-card,
 .project-form {
   padding: 26px;
   border: 1px solid #d9dedb;
   border-radius: 18px;
-  background: white;
+  background: #ffffff;
+  background-image: none;
+  box-shadow: none;
+  filter: none;
 }
 
-.featured-project {
-  border-color: #efb080;
-  box-shadow: inset 4px 0 0 #ec7100;
+/*
+ * Featured project card:
+ * exact requested background #E6DFDF.
+ */
+.project-card.featured-project {
+  border: 1px solid #d3caca;
+  background: #e6dfdf !important;
+  background-color: #e6dfdf !important;
+  background-image: none !important;
+  box-shadow: none;
+  filter: none;
 }
 
 .project-type {
   display: inline-block;
   margin-bottom: 12px;
-  color: #bd531f;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  color: rgb(0 0 0 / 48%);
+  font-family: "Public Sans", sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .project-card h3 {
   margin: 0 0 12px;
-  color: #172b24;
+  color: #000000;
+  font-family: "Public Sans", sans-serif;
 }
 
 .project-card p {
   margin: 0;
   color: #596560;
+  font-family: "Public Sans", sans-serif;
   line-height: 1.6;
+}
+
+.projects-empty {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 16px;
 }
 
 .project-form-list {
@@ -913,6 +1025,7 @@ onMounted(loadProfile)
   align-items: center;
   gap: 8px;
   color: #253732;
+  font-family: "Public Sans", sans-serif;
 }
 
 .edit-actions {
@@ -961,6 +1074,19 @@ onMounted(loadProfile)
   .edit-button {
     width: 100%;
     min-width: 0;
+  }
+
+  .profile-header h1 {
+    font-size: 30px;
+  }
+
+  .class-year {
+    font-size: 20px;
+  }
+
+  .biography,
+  .project-type {
+    font-size: 18px;
   }
 }
 </style>
