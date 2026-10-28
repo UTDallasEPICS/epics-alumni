@@ -74,21 +74,17 @@ function changeEmail() {
 <template>
   <main class="login-page">
     <section class="login-card">
-      <!-- EPICS logo -->
-      <div class="epics-logo" aria-label="EPICS">
-        <span class="logo-orange">E</span>
-        <span class="logo-yellow">P</span>
-        <span class="logo-green">I</span>
-        <span class="logo-teal">C</span>
-        <span class="logo-blue">S</span>
-      </div>
+    <img
+      src="/images/epics-logo.png"
+      alt="UT Dallas EPICS"
+      class="epics-logo-image"
+    />
 
       <div class="login-heading">
-        <p class="eyebrow">UTD Alumni Network</p>
         <h1>Welcome User </h1>
 
         <p v-if="!isEmailSent">
-          Enter your email to receive a secure sign-in code.
+          Enter your email to receive a OTP.
         </p>
 
         <p v-else>
@@ -106,7 +102,7 @@ function changeEmail() {
         <UFormField
           v-if="!isEmailSent"
           name="email"
-          label="Email address"
+          :ui="{ error: 'hidden' }"
         >
           <UInput
             v-model="state.email"
@@ -175,48 +171,13 @@ function changeEmail() {
   background: #ffffff;
 }
 
-/* EPICS logo */
-.epics-logo {
+.epics-logo-image {
+  display: block;
+  width: 190px;
+  max-width: 100%;
+  height: auto;
   margin-bottom: 28px;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(3rem, 12vw, 4.3rem);
-  font-weight: 900;
-  line-height: 0.9;
-  letter-spacing: -0.09em;
-}
-
-.epics-logo span {
-  display: inline-block;
-  text-shadow: 2px 2px 0 rgb(255 255 255 / 65%);
-}
-
-.logo-orange {
-  color: #ee8c2d;
-  transform: rotate(-3deg);
-}
-
-.logo-yellow {
-  color: #e5b62f;
-  transform: translateY(2px) rotate(2deg);
-}
-
-.logo-green {
-  color: #76a744;
-  transform: rotate(-2deg);
-}
-
-.logo-teal {
-  color: #2f9c83;
-  transform: translateY(-1px) rotate(3deg);
-}
-
-.logo-blue {
-  color: #287aad;
-  transform: rotate(-2deg);
-}
-
-.login-heading {
-  margin-bottom: 28px;
+  object-fit: contain;
 }
 
 .eyebrow {
