@@ -4,11 +4,11 @@ import { announcments } from '../../../db/schema'
 import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
-  const notificationId = getRouterParam(event, 'id')
-
-  if (!notificationId) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing notificationId' })
+  const id = getRouterParam(event, 'id')
+  if (!id) {
+    throw createError({ statusCode: 400, statusMessage: 'Missing notification id' })
   }
 
-  return await db.delete(announcments).where(eq(announcments.id, notificationId))
+  await db.delete(announcments).where(eq(announcments.id, id))
+  return { ok: true }
 })
