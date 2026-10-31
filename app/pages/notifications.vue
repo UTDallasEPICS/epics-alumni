@@ -1,23 +1,17 @@
 <template>
-  <div class="page">
-    <main>
-      <p class="heading">Notifications</p>
-      <div class="stack">
-        <div class="box"><p>Notifications go here</p></div>
-        <div class="box"><p>Notifications go here</p></div>
-        <div class="box"><p>Notifications go here</p></div>
-        <div class="box"><p>Notifications go here</p></div>
-      </div>
-    </main>
-  </div>
+  <main>
+    <p class="heading">Notifications</p>
+    <div class="stack">
+      <div class="box"><p>Notifications go here</p></div>
+      <div class="box"><p>Notifications go here</p></div>
+      <div class="box"><p>Notifications go here</p></div>
+      <div class="box"><p>Notifications go here</p></div>
+      <div class="box"><p>Notifications go here</p></div>
+    </div>
+  </main>
 </template>
 
 <style scoped>
-  .page {
-    background-color: white;
-    color: black;
-    min-height: 100vh;
-  }
   /* Specifying the positions in pixels is not a good idea, as it will not be responsive.
   Instead, use relative positioning or flexbox/grid to position elements. */
   /* Once you have a layout that works well, paste it to noti_tester.vue and then we can work on the notifications logic. */
