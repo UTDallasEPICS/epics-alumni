@@ -26,17 +26,18 @@
     font-size: 1.5rem;
     font-weight: bold;
     margin-bottom: 1rem;
-    position: relative;
+    position: absolute;
     padding-top: 1%;
     left: 15%;
   }
   .stack {
+    padding-top: 4%;
     display: flex;
     flex-direction: column;
     align-items: center;
   }
   .box {
-    border: 1px solid #000000;
+    border: 0.01vw solid #000000;
     background-color: #f3f4f3;
     width: 70vw;
     height: 20vh;
