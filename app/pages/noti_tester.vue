@@ -11,7 +11,7 @@
       await $fetch('/api/notifications' as string, {
         method: 'POST',
         body: {
-          createdBy: 'tester_user',
+          createdBy: 'okiWNIbQupCDYEQeqttnYtSu5asGtvWf',
           message: notificationMessage.value,
           timestamp: new Date().toISOString(),
         },
