@@ -1,5 +1,7 @@
 <script setup lang="ts">
-  import type { DropdownMenuItem } from '@nuxt/ui'
+  import type { DropdownMenuItem } from "@nuxt/ui"
+  import { useInfiniteScroll } from '@vueuse/core'
+
 
   interface Project {
     id: string
@@ -9,9 +11,35 @@
     status: string
     description: string
   }
+  // For pagination of pages
+  const pageSize = 15
+  const hasMore = ref(true)
+  const skip = ref(0)
 
   // Fetch project data from the backend API.
-  const { data: projects, status: fetchStatus, error } = await useFetch<Project[]>('/api/projects')
+  const { data, status, error } = await useLazyFetch<Project[]>('/api/projects', {key: 'projects-infinite-scroll', query: {skip}, server: false,})
+
+  const projects = ref<Project[]>([])
+
+  // Appends new page
+  watch(data, (page) => {
+    if (!page) return
+    projects.value = [...projects.value, ...page]
+    hasMore.value = page.length === pageSize
+  })
+
+  onMounted(() => {
+    useInfiniteScroll(
+      window,
+      () => {
+        skip.value += pageSize
+      },
+      {
+        distance: 200,
+        canLoadMore: () => hasMore.value && status.value !== 'pending',
+      }
+    )
+  })
 
   // Shared search state used by the navbar.
   const route = useRoute()
@@ -107,7 +135,7 @@
     </div>
 
     <!-- Loading state. -->
-    <p v-if="fetchStatus === 'pending'">Loading projects...</p>
+    <p v-if="status === 'pending' && projects.length === 0">Loading projects...</p>
 
     <!-- API error state. -->
     <p v-else-if="error" class="text-red-500">Unable to load projects. Please try again.</p>
@@ -121,8 +149,7 @@
 
     <template v-else>
       <!-- Number of matching projects. -->
-      <p class="mb-4 text-sm text-gray-500">{{ filteredProjects.length }} projects</p>
-
+      <p class="mb-4 text-sm text-gray-500">{{ filteredProjects.length }} projects</p>      
       <!-- Project cards. -->
       <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <UCard
@@ -187,6 +214,12 @@
               <li>Fourth student</li>
               <li>Fifth student</li>
               <li>Sixth student</li>
+            </ul>
+            <h5 class="mb-1 text-base font-semibold">Mentor:</h5>
+
+            <!-- Replace these placeholders with actual mentor when available. -->
+            <ul class="list-disc pl-5">
+              <li>Mentor Name</li>
             </ul>
           </div>
         </div>

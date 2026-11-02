@@ -6,10 +6,6 @@
   function submitSearch() {
     const query = searchQuery.value.trim()
 
-    navigateTo({
-      path: '/projects',
-      query: query ? { search: query } : {},
-    })
   }
 </script>
 
@@ -22,15 +18,15 @@
 
     <!-- Functional Search -->
     <form class="search" @submit.prevent="submitSearch">
-      <button type="submit" class="search-button" aria-label="Search projects">
+      <button type="submit" class="search-button" aria-label="Search">
         <span class="search-icon">⌕</span>
       </button>
 
       <input
         v-model="searchQuery"
         type="search"
-        placeholder="Search projects..."
-        aria-label="Search projects"
+        placeholder="Search"
+        aria-label="Search"
       />
     </form>
 
