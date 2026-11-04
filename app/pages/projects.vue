@@ -17,7 +17,7 @@
   const skip = ref(0)
 
   // Fetch project data from the backend API.
-  const { data, status, error } = await useLazyFetch<Project[]>('/api/projects', {key: 'projects-infinite-scroll', query: {skip}, server: false,})
+  const { data, status, error } = await useLazyFetch<Project[]>('/api/projects', {key: 'projects-infinite-scroll', query: {skip}})
 
   const projects = ref<Project[]>([])
 
@@ -26,7 +26,9 @@
     if (!page) return
     projects.value = [...projects.value, ...page]
     hasMore.value = page.length === pageSize
-  })
+  },
+  { immediate: true }
+)
 
   onMounted(() => {
     useInfiniteScroll(
