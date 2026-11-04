@@ -5,7 +5,6 @@
   // Navigate to the Projects page and apply the search.
   function submitSearch() {
     const query = searchQuery.value.trim()
-
   }
 </script>
 
@@ -19,15 +18,10 @@
     <!-- Functional Search -->
     <form class="search" @submit.prevent="submitSearch">
       <button type="submit" class="search-button" aria-label="Search">
-        <span class="search-icon">⌕</span>
+        <span class="material-symbols-outlined search-icon">search</span>
       </button>
 
-      <input
-        v-model="searchQuery"
-        type="search"
-        placeholder="Search"
-        aria-label="Search"
-      />
+      <input v-model="searchQuery" type="search" placeholder="Search" aria-label="Search" />
     </form>
 
     <!-- Navigation Icons -->
@@ -35,7 +29,7 @@
       <!-- Home -->
       <UTooltip :content="{ align: 'center', side: 'bottom', sideOffset: 3 }" text="Home">
         <NuxtLink to="/" class="nav-link" :class="{ active: route.path === '/' }" aria-label="Home">
-          <span class="icon home-icon"></span>
+          <span class="material-symbols-outlined">home</span>
         </NuxtLink>
       </UTooltip>
 
@@ -47,7 +41,7 @@
           :class="{ active: route.path.startsWith('/people') }"
           aria-label="People"
         >
-          <span class="icon people-icon"></span>
+          <span class="material-symbols-outlined">group</span>
         </NuxtLink>
       </UTooltip>
 
@@ -59,7 +53,7 @@
           :class="{ active: route.path.startsWith('/projects') }"
           aria-label="Projects"
         >
-          <span class="icon projects-icon"></span>
+          <span class="material-symbols-outlined">folder</span>
         </NuxtLink>
       </UTooltip>
 
@@ -71,7 +65,7 @@
           :class="{ active: route.path.startsWith('/messages') }"
           aria-label="Messages"
         >
-          <span class="icon chat-icon"></span>
+          <span class="material-symbols-outlined">chat</span>
         </NuxtLink>
       </UTooltip>
 
@@ -83,7 +77,7 @@
           :class="{ active: route.path.startsWith('/notifications') }"
           aria-label="Notifications"
         >
-          <span class="icon notification-icon"></span>
+          <span class="material-symbols-outlined">notifications</span>
         </NuxtLink>
       </UTooltip>
 
@@ -95,7 +89,7 @@
           :class="{ active: route.path.startsWith('/profile') }"
           aria-label="Profile"
         >
-          <span class="icon profile-icon"></span>
+          <span class="material-symbols-outlined">account_circle</span>
         </NuxtLink>
       </UTooltip>
     </div>
@@ -161,7 +155,7 @@
     cursor: pointer;
   }
 
-  .search-icon {
+  .search .search-icon {
     color: #dfe9e4;
     font-size: 28px;
     line-height: 1;
@@ -206,7 +200,14 @@
     color: #dfe9e4;
     text-decoration: none;
 
-    transition: color 0.2s ease;
+    transition:
+      color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: white;
+    transform: translateY(-1px);
   }
 
   /* active page color */
@@ -214,52 +215,23 @@
     color: #5fe0b7;
   }
 
-  /* icons */
-  .icon {
-    display: block;
-
-    width: 32px;
-    height: 32px;
-
-    background-color: currentColor;
-
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: contain;
-
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    -webkit-mask-size: contain;
+  /* Google Material Symbols */
+  .material-symbols-outlined {
+    font-size: 32px;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 32;
   }
 
-  .home-icon {
-    mask-image: url('/images/home-icon.svg');
-    -webkit-mask-image: url('/images/home-icon.svg');
-  }
-
-  .people-icon {
-    mask-image: url('/images/people-icon.svg');
-    -webkit-mask-image: url('/images/people-icon.svg');
-  }
-
-  .projects-icon {
-    mask-image: url('/images/projects-icon.svg');
-    -webkit-mask-image: url('/images/projects-icon.svg');
-  }
-
-  .chat-icon {
-    mask-image: url('/images/chat-icon.svg');
-    -webkit-mask-image: url('/images/chat-icon.svg');
-  }
-
-  .notification-icon {
-    mask-image: url('/images/notification-icon.svg');
-    -webkit-mask-image: url('/images/notification-icon.svg');
-  }
-
-  .profile-icon {
-    mask-image: url('/images/profile-icon.svg');
-    -webkit-mask-image: url('/images/profile-icon.svg');
+  /* Fill the active page's icon */
+  .nav-link.active .material-symbols-outlined {
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 32;
   }
 
   /* smaller screens like mobile */
@@ -281,9 +253,8 @@
       gap: 14px;
     }
 
-    .icon {
-      width: 28px;
-      height: 28px;
+    .material-symbols-outlined {
+      font-size: 28px;
     }
   }
 
@@ -306,12 +277,11 @@
       gap: 10px;
     }
 
-    .icon {
-      width: 23px;
-      height: 23px;
+    .material-symbols-outlined {
+      font-size: 23px;
     }
 
-    .search-icon {
+    .search .search-icon {
       font-size: 23px;
     }
 

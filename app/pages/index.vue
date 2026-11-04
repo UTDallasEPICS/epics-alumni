@@ -1,197 +1,218 @@
-<script setup lang="ts">
-  import { authClient } from '../utils/auth-client'
-
-  const { data: users, pending, error } = await useFetch('/api/users')
-
-  const selectedFile = ref<File | null>(null)
-  const imagePreview = ref<string>('')
-  const isUploading = ref(false)
-  const isModalOpen = ref(false)
-
-  async function logout() {
-    await authClient.signOut()
-    await navigateTo('/auth', { external: true })
-  }
-
-  function getImageLink(user: { image: boolean; id: string }) {
-    return user.image ? 'api/users/' + user.id + '/profile' : undefined
-  }
-
-  function handleImageUpload(event: Event) {
-    const target = event.target as HTMLInputElement
-    const files = target.files as FileList
-
-    if (!files || files.length === 0) return
-
-    const file = files[0]
-
-    if (!file?.type.startsWith('image/')) {
-      return
-    }
-
-    selectedFile.value = file
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      imagePreview.value = e.target?.result as string
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const openModal = () => {
-    isModalOpen.value = true
-  }
-
-  const closeModal = () => {
-    isModalOpen.value = false
-  }
-
-  async function updatePfp() {
-    if (!selectedFile.value) return
-
-    isUploading.value = true
-
-    try {
-      const formData = new FormData()
-      formData.append('file', selectedFile.value)
-
-      await $fetch('/api/users/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      // Refresh users data to show updated profile picture
-      await refreshNuxtData()
-
-      // Reset state
-      selectedFile.value = null
-      imagePreview.value = ''
-      isModalOpen.value = false
-    } catch (error) {
-      console.error('Upload failed:', error)
-    } finally {
-      isUploading.value = false
-    }
-  }
-</script>
-
 <template>
-  <UContainer class="py-10">
-    <div class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Dashboard</h1>
-        <p class="mt-1 text-gray-500 dark:text-gray-400">
-          Manage your application users and settings.
-        </p>
-      </div>
-      <div class="flex justify-between gap-4 md:items-center">
-        <UModal :open="isModalOpen">
-          <UButton
-            color="success"
-            variant="soft"
-            @click="openModal"
-            icon="i-heroicons-arrow-up-on-square-20-solid"
-            label="Update Profile Picture"
-          />
+  <div class="landing-page">
+    <div class="page-container">
+      <!-- Floating left menu -->
+      <aside class="community-card">
+        <h2>Community</h2>
 
-          <template #content>
-            <div class="m-12 space-y-4">
-              <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                Update Profile Picture
-              </h3>
+        <NuxtLink to="/newsletters"> Past Newsletters </NuxtLink>
 
-              <div v-if="imagePreview" class="flex justify-center">
-                <UAvatar :src="imagePreview" size="3xl" />
-              </div>
+        <NuxtLink to="/project-partners"> Project Partners </NuxtLink>
 
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="file:bg-primary-50 file:text-brand4 hover:file:bg-primary-100 block w-full cursor-pointer text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold"
-                  @change="handleImageUpload"
-                />
-              </div>
+        <NuxtLink to="/alumni-spotlights"> Alumni Spotlights </NuxtLink>
+      </aside>
 
-              <div class="flex justify-end gap-2">
-                <UButton variant="soft" @click="closeModal"> Cancel </UButton>
-                <UButton
-                  color="success"
-                  :loading="isUploading"
-                  :disabled="!selectedFile"
-                  @click="updatePfp"
-                >
-                  Upload
-                </UButton>
-              </div>
-            </div>
-          </template>
-        </UModal>
-        <UButton
-          color="error"
-          variant="soft"
-          icon="i-heroicons-arrow-right-on-rectangle-20-solid"
-          label="Logout"
-          @click="logout"
-        />
-      </div>
+      <!-- Main feed -->
+      <main class="feed">
+        <!-- Project post -->
+        <section class="feed-card">
+          <div class="project-image">can add picture of their final board</div>
+
+          <p class="project-description">
+            Students post their end of semester poster board and provide details
+          </p>
+        </section>
+
+        <!-- Newsletter -->
+        <section class="feed-card newsletter-card">
+          <h3>Most current newsletter</h3>
+        </section>
+      </main>
     </div>
-
-    <UCard class="w-full">
-      <template #header>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <UIcon name="i-heroicons-users-20-solid" class="h-5 w-5 text-gray-500" />
-            <h2 class="text-base leading-7 font-semibold text-gray-900 dark:text-white">
-              Registered Users
-            </h2>
-          </div>
-          <UBadge variant="subtle" color="primary" size="md">{{ users?.length || 0 }} Users</UBadge>
-        </div>
-      </template>
-
-      <div v-if="pending" class="space-y-4">
-        <div v-for="i in 3" :key="i" class="flex items-center justify-between py-2">
-          <div class="flex w-full items-center gap-3">
-            <USkeleton class="h-10 w-10 rounded-full" />
-            <div class="w-full max-w-[200px] space-y-2">
-              <USkeleton class="h-4 w-full" />
-              <USkeleton class="h-3 w-2/3" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-else-if="error">
-        <UAlert
-          icon="i-heroicons-exclamation-triangle-20-solid"
-          color="error"
-          variant="subtle"
-          title="Error loading users"
-          :description="error.message"
-        />
-      </div>
-
-      <div v-else class="divide-y divide-gray-200 dark:divide-gray-800">
-        <div
-          v-for="user in users"
-          :key="user.id"
-          class="flex items-center justify-between py-4 first:pt-0 last:pb-0"
-        >
-          <div class="flex items-center gap-3">
-            <UAvatar :src="getImageLink(user)" :alt="user.name" size="md" :as="{ img: 'img' }" />
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">{{ user.name }}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</p>
-            </div>
-          </div>
-          <UBadge :color="user.emailVerified ? 'success' : 'warning'" variant="subtle" size="sm">
-            {{ user.emailVerified ? 'Verified' : 'Pending' }}
-          </UBadge>
-        </div>
-
-        <div v-if="users?.length === 0" class="py-8 text-center text-gray-500">No users found.</div>
-      </div>
-    </UCard>
-  </UContainer>
+  </div>
 </template>
+
+<style scoped>
+  .landing-page {
+    min-height: 100vh;
+    background-color: #f3f2ef;
+    padding: 32px 24px;
+    box-sizing: border-box;
+  }
+
+  .page-container {
+    width: 100%;
+    max-width: 1200px;
+
+    margin: 0 auto;
+
+    display: grid;
+    grid-template-columns: 220px minmax(0, 700px);
+    gap: 24px;
+
+    justify-content: center;
+    align-items: start;
+  }
+
+  /* ---------------- LEFT COMMUNITY CARD ---------------- */
+
+  .community-card {
+    background-color: white;
+
+    border: 1px solid #d6d6d6;
+    border-radius: 12px;
+
+    padding: 24px 18px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+
+    position: sticky;
+    top: 100px;
+  }
+
+  .community-card h2 {
+    margin: 0;
+
+    color: #154734;
+
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .community-card a {
+    color: #333;
+
+    text-decoration: none;
+
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+
+    transition: color 0.2s ease;
+  }
+
+  .community-card a:hover {
+    color: #e87500;
+  }
+
+  /* ---------------- MAIN FEED ---------------- */
+
+  .feed {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 24px;
+  }
+
+  .feed-card {
+    width: 100%;
+
+    background-color: white;
+
+    border: 1px solid #d6d6d6;
+    border-radius: 12px;
+
+    padding: 32px;
+
+    box-sizing: border-box;
+  }
+
+  /* ---------------- PROJECT POST ---------------- */
+
+  .project-image {
+    width: 100%;
+    height: 260px;
+
+    background-color: #d9d9d9;
+
+    border-radius: 8px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    font-size: 18px;
+
+    margin-bottom: 24px;
+  }
+
+  .project-description {
+    margin: 0;
+
+    font-size: 18px;
+    line-height: 1.5;
+
+    color: #222;
+  }
+
+  /* ---------------- NEWSLETTER ---------------- */
+
+  .newsletter-card {
+    min-height: 180px;
+  }
+
+  .newsletter-card h3 {
+    margin: 0;
+
+    font-size: 20px;
+    font-weight: 600;
+
+    color: #222;
+  }
+
+  /* ---------------- RESPONSIVE ---------------- */
+
+  @media (max-width: 900px) {
+    .landing-page {
+      padding: 20px;
+    }
+
+    .page-container {
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .community-card {
+      padding: 20px 14px;
+    }
+
+    .feed-card {
+      padding: 24px;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .page-container {
+      display: block;
+    }
+
+    .community-card {
+      position: static;
+
+      margin-bottom: 20px;
+
+      flex-direction: row;
+      flex-wrap: wrap;
+
+      align-items: center;
+    }
+
+    .community-card h2 {
+      width: 100%;
+    }
+
+    .feed-card {
+      padding: 20px;
+    }
+
+    .project-image {
+      height: 220px;
+    }
+  }
+</style>
