@@ -101,7 +101,6 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
 }))
 
-<<<<<<< HEAD
 export const announcments = sqliteTable('announcements', {
   id: text('id')
     .primaryKey()
@@ -110,7 +109,13 @@ export const announcments = sqliteTable('announcements', {
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
   message: text('message').notNull(),
-=======
+  createdAt: integer('createdAt', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updatedAt', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+})
 export const project = sqliteTable('project', {
   id: text('id')
     .primaryKey()
@@ -120,7 +125,6 @@ export const project = sqliteTable('project', {
   projectCategory: text('projectCategory').notNull(),
   status: text('status').notNull(),
   description: text('description').notNull(),
->>>>>>> 1a6ccf0e292264b213d54af35b9542e574212ea5
   createdAt: integer('createdAt', { mode: 'timestamp' })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -129,11 +133,9 @@ export const project = sqliteTable('project', {
     .$defaultFn(() => new Date()),
 })
 
-<<<<<<< HEAD
-=======
+export const selectAnnouncementSchema = createSelectSchema(announcments)
 export const selectProjectSchema = createSelectSchema(project)
 export const insertProjectSchema = createInsertSchema(project)
->>>>>>> 1a6ccf0e292264b213d54af35b9542e574212ea5
 export const selectUserSchema = createSelectSchema(user)
 export const insertUserSchema = createInsertSchema(user)
 export const selectSessionSchema = createSelectSchema(session)
