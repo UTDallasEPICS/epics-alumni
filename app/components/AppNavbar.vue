@@ -2,9 +2,13 @@
   const route = useRoute()
   const { searchQuery } = useProjectSearch()
 
-  // Navigate to the Projects page and apply the search.
+  // Go to the Projects page when the search is submitted. The input is bound
+  // to the shared searchQuery, which projects.vue uses to filter the list.
   function submitSearch() {
-    const query = searchQuery.value.trim()
+    searchQuery.value = searchQuery.value.trim()
+    if (route.path !== '/projects') {
+      navigateTo('/projects')
+    }
   }
 </script>
 
