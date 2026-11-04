@@ -18,6 +18,13 @@ export default defineEventHandler((event) => {
         image: user.image,
         graduationYear: profile.graduationYear,
         biography: profile.bio,
+        major: profile.major,
+        company: profile.company,
+        jobTitle: profile.jobTitle,
+        linkedinUrl: profile.linkedinUrl,
+        githubUrl: profile.githubUrl,
+        websiteUrl: profile.websiteUrl,
+        directoryPublished: profile.directoryPublished,
       }).from(user).leftJoin(profile, eq(profile.userId, user.id))
         .where(eq(user.id, currentUser.id)).get()
     } catch {

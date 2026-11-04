@@ -1,9 +1,16 @@
+import { blockPrivateAssets } from './server/utils/private-assets'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/eslint'],
-  css: ['./assets/css/main.css'],
+  css: ['~/assets/css/main.css'],
+  nitro: {
+    // Never copy legacy private uploads to the deployable public directory.
+    ignore: ['**/images/users/**'],
+    devHandlers: [{ handler: blockPrivateAssets }],
+  },
   // Prettier owns formatting; ESLint handles logic only (no stylistic rules).
   eslint: {
     config: {
@@ -18,6 +25,11 @@ export default defineNuxtConfig({
     typeCheck: process.env.NODE_ENV !== 'production',
   },
   vite: {
+    server: {
+      fs: {
+        deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/.data/**', '**/users/*/images/**', '**/*.{db,sqlite}', '**/*.{db,sqlite}-*'],
+      },
+    },
     optimizeDeps: {
       include: ['better-auth/client/plugins', 'better-auth/vue', 'zod'],
     },

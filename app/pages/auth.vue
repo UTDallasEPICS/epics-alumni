@@ -4,17 +4,18 @@ import { authClient } from '../utils/auth-client'
 
 const toast = useToast()
 const isEmailSent = ref(false)
+const isSubmitting = ref(false)
 
 const schema = computed(() => {
   if (!isEmailSent.value) {
     return z.object({
-      email: z.string().email('Enter a valid email address'),
+      email: z.string().trim().email('Enter a valid email address'),
     })
   }
 
   return z.object({
-    email: z.string().email('Enter a valid email address'),
-    otp: z.array(z.string()).length(6, 'Enter all 6 digits'),
+    email: z.string().trim().email('Enter a valid email address'),
+    otp: z.array(z.string().regex(/^[0-9]$/, 'Enter a six-digit code')).length(6, 'Enter all 6 digits'),
   })
 })
 
@@ -24,48 +25,42 @@ const state = reactive({
 })
 
 async function handleSubmit() {
-  if (!isEmailSent.value) {
-    const { error } =
-      await authClient.emailOtp.sendVerificationOtp({
-        email: state.email,
-        type: 'sign-in',
-      })
-
-    if (error) {
-      toast.add({
-        title: 'Error',
-        description: error.message,
-        color: 'error',
-      })
-    } else {
+  if (isSubmitting.value) return
+  const parsed = schema.value.safeParse(state)
+  if (!parsed.success) {
+    toast.add({ title: 'Check your details', description: parsed.error.issues[0]?.message, color: 'error' })
+    return
+  }
+  isSubmitting.value = true
+  try {
+    state.email = parsed.data.email
+    if (!isEmailSent.value) {
+      const { error } = await authClient.emailOtp.sendVerificationOtp({ email: state.email, type: 'sign-in' })
+      if (error) {
+        toast.add({ title: 'Unable to send code', description: error.message || 'Please try again.', color: 'error' })
+        return
+      }
       isEmailSent.value = true
-
-      toast.add({
-        title: 'Success',
-        description: 'A login code was sent to your email',
-        color: 'success',
-      })
-    }
-  } else {
-    const { error } = await authClient.signIn.emailOtp({
-      email: state.email,
-      otp: state.otp.join(''),
-    })
-
-    if (error) {
-      toast.add({
-        title: 'Error',
-        description: error.message,
-        color: 'error',
-      })
+      toast.add({ title: 'Code sent', description: 'A login code was sent to your email.', color: 'success' })
     } else {
-      // Opens the dashboard from your second code file.
+      const { error } = await authClient.signIn.emailOtp({ email: state.email, otp: state.otp.join('') })
+      if (error) {
+        toast.add({ title: 'Unable to sign in', description: error.message || 'Check your code and try again.', color: 'error' })
+        return
+      }
+      // Reload with the newly issued cookie. The profile API supplies persisted
+      // onboarding status; returning users do not repeat setup.
       await navigateTo('/', { external: true })
     }
+  } catch {
+    toast.add({ title: 'Connection problem', description: 'Please try again. Your sign-in details have been kept.', color: 'error' })
+  } finally {
+    isSubmitting.value = false
   }
 }
 
 function changeEmail() {
+  if (isSubmitting.value) return
   isEmailSent.value = false
   state.otp = []
 }
@@ -106,6 +101,7 @@ function changeEmail() {
         >
           <UInput
             v-model="state.email"
+            :disabled="isSubmitting"
             type="email"
             autocomplete="email"
             placeholder="johndoe@example.com"
@@ -121,6 +117,7 @@ function changeEmail() {
         >
           <UPinInput
             v-model="state.otp"
+            :disabled="isSubmitting"
             otp
             :length="6"
             size="xl"
@@ -129,7 +126,8 @@ function changeEmail() {
         </UFormField>
 
         <UButton
-          loading-auto
+          :loading="isSubmitting"
+          :disabled="isSubmitting"
           type="submit"
           size="xl"
           class="login-button"
@@ -141,6 +139,7 @@ function changeEmail() {
           v-if="isEmailSent"
           type="button"
           class="change-email-button"
+          :disabled="isSubmitting"
           @click="changeEmail"
         >
           Use a different email

@@ -1,41 +1,37 @@
 import 'dotenv/config'
+import path from 'node:path'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import * as schema from './schema'
 
-const connectionString = process.env.DATABASE_URL!.replace('file:', '')
-const sqlite = new Database(connectionString)
-const db = drizzle(sqlite, { schema })
-
-async function main() {
-  console.log('Start seeding...')
-
-  const existingUser = await db.query.user.findFirst({
-    where: (user, { eq }) => eq(user.email, 'seeded-user@email.com'),
-  })
-
-  if (!existingUser) {
-    const [created] = await db
-      .insert(schema.user)
-      .values({
-        email: 'seeded-user@email.com',
-        name: 'Sample Seeded User',
-      })
-      .returning()
-    console.log({ user: created })
-  } else {
-    console.log({ user: existingUser })
-  }
-
-  console.log('Seeding finished.')
+// Deliberately require an isolated, explicitly named demonstration database.
+// Never run this seed automatically during startup, migrations, or deployment.
+const databasePath = process.env.DATABASE_URL?.replace(/^file:/, '')
+if (process.env.NODE_ENV !== 'development' || process.env.EPICS_SEED_DEMO !== '1' ||
+    !databasePath || path.basename(databasePath) !== 'epics-demo.sqlite') {
+  throw new Error('Demo seed requires NODE_ENV=development, EPICS_SEED_DEMO=1, and DATABASE_URL=file:<path>/epics-demo.sqlite. Run migrations first.')
 }
-
-main()
-  .then(() => {
-    sqlite.close()
+const sqlite = new Database(databasePath, { fileMustExist: true })
+const db = drizzle(sqlite, { schema })
+try {
+  db.transaction((tx) => {
+    for (let index = 1; index <= 14; index++) {
+      const id = `epics-demo-${String(index).padStart(2, '0')}`
+      const created = tx.insert(schema.user).values({
+        id, name: `Demo Alumnus ${String(index).padStart(2, '0')}`,
+        email: `${id}@example.invalid`,
+      }).onConflictDoNothing().returning({ id: schema.user.id }).get()
+      // Re-running cannot overwrite edits or republish a withdrawn profile.
+      if (!created) continue
+      tx.insert(schema.profile).values({
+        userId: id, major: index === 14 ? null : index % 2 ? 'Computer Science' : 'Mechanical Engineering',
+        graduationYear: 2024 + index % 3, company: index % 2 ? 'Demo Robotics' : 'Demo Research',
+        jobTitle: index % 2 ? 'Engineer' : 'Researcher', bio: 'Fictional local demonstration profile.',
+        directoryPublished: index <= 12,
+      }).run()
+    }
   })
-  .catch((e) => {
-    console.error(e)
-    sqlite.close()
-    process.exit(1)
-  })
+  console.log('Demo seed complete: 12 opted-in examples, one private example, and one incomplete example. Existing rows were preserved.')
+} finally {
+  sqlite.close()
+}

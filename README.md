@@ -1,6 +1,6 @@
-# Nuxt Template (Better Auth + Drizzle + SQLite)
+# EPICS Alumni Tracker (Better Auth + Drizzle + SQLite)
 
-A modern, production-ready Nuxt 4 template featuring a robust authentication system, ORM integration, and a clean UI foundation.
+An EPICS alumni application with email OTP sign-in, persistent profiles, onboarding, and an authenticated directory based on explicit publication consent.
 
 ## Features
 
@@ -10,7 +10,7 @@ A modern, production-ready Nuxt 4 template featuring a robust authentication sys
 - **SQLite**: Lightweight, zero-configuration database, ideal for development and small-to-medium projects.
 - **Nuxt UI v4**: Beautiful, accessible, and customizable UI components built with Tailwind CSS.
 - **Nodemailer**: Pre-configured for sending verification emails via Gmail.
-- **Vitest**: A ready-to-run testing baseline with an example component test. See [Testing](#testing).
+- **Vitest**: Profile, privacy, migration, component, and HTTP integration tests. See [Testing](#testing).
 
 ## Stack
 
@@ -29,7 +29,7 @@ See the [Documentation](#documentation) section for topic guides. Otherwise, fol
 
 ```bash
 git clone <your-repo-url>
-cd nuxt-template
+cd epics-alumni
 ```
 
 ### 2. Install dependencies
@@ -78,6 +78,10 @@ Open `.env` and configure the following:
 - `BETTER_AUTH_URL`: The base URL of your application (default: `http://localhost:3000`).
 - `EMAIL_USER`: Your Gmail address (for OTP delivery).
 - `EMAIL_PASS`: Your Gmail App Password. [How to generate an App Password](https://support.google.com/accounts/answer/185833).
+- `EMAIL_HOST` and `EMAIL_FROM`: SMTP hostname and the permitted sender address. SMTP uses port 587 with STARTTLS when advertised; transport timeouts are bounded.
+- `UPLOAD_STORAGE_PATH`: Private persistent avatar storage, normally `.data/uploads`, outside `public`. Keep this directory and the SQLite file on persistent writable storage in deployment. Do not serve the upload directory through a web server or CDN.
+
+Keep `.env`, databases, and uploaded files out of Git. Existing installations configured with `public/images` remain supported through the authenticated avatar endpoint; direct `/images/users/**` and optimizer access are blocked, and legacy uploads are excluded from build output. If a reverse proxy separately serves the source `public` directory, block that path there too or move the upload tree to private storage and update the variable. The application does not move or delete existing uploads.
 
 ### 4. Database Setup
 
@@ -86,6 +90,8 @@ Initialize your SQLite database and run migrations. You will need to run this co
 ```bash
 pnpm db:migrate
 ```
+
+Migration `0002_profile_publication.sql` adds `profile.directoryPublished`, non-null and false by default. Apply it before starting this version. It preserves existing profiles and keeps them private. Historical migrations are unchanged. Back up the actual SQLite file before a deployment migration; the automated migration tests use temporary files only.
 
 During development, if there are any database changes since the last migration, you will need to generate a new migration.
 
@@ -101,19 +107,31 @@ pnpm dev
 
 Your application will be available at `http://localhost:3000`.
 
-### 6. How to Login
+### 6. Sign in and demonstrate the MVP
 
-Login requires an email address that already exists in the database.
+1. Open `http://localhost:3000`. Unauthenticated visitors go to `/auth`.
+2. Enter an email inbox you control and request a code. New accounts are created automatically after a valid OTP; no account seed is required.
+3. Enter the emailed six-digit code. On the profile page, complete name, major, and graduation year, then save. Completion comes from saved database values.
+4. Edit company, job title, biography, professional HTTPS links, or upload a JPEG/PNG/WebP image (maximum 5 MiB). Refresh to verify persistence.
+5. Check **Make my completed profile visible to signed-in EPICS members** and save. Completing onboarding alone never publishes a profile.
+6. Open `/people`; search by name, combine filters, change page size, and open a profile. Only complete, consenting profiles appear; email addresses are excluded.
+7. Uncheck publication and save. The profile and its avatar become unavailable to other members, including through direct URLs. Clearing a required field also revokes visibility; completing it again requires a new opt-in.
+8. Use **Logout** on the profile page. Refresh `/people` to confirm the login redirect. A returning completed user skips onboarding.
 
-- **Option A: Use the seeded user**
-  Go to `/auth` and log in with `email@example.com`.
-- **Option B: Use your own email**
-  Update `server/db/seed.ts` with your email, then run `pnpm db:seed` to re-seed.
+SMTP acceptance is not proof of inbox delivery. Confirm the live-provider flow manually with an inbox you control, including retry after a provider failure. Delivery failures return a generic retryable error and keep the login form on the email step. Never obtain login codes from a production database.
 
-**To get your OTP:**
+### Optional isolated demonstration data
 
-- Check your configured email inbox.
-- **Or**, run `pnpm db:studio` to open **Drizzle Studio** and look in the `verification` table.
+This opt-in seed creates fictional profiles only in a database named `epics-demo.sqlite`, requires development mode, and never runs during startup or deployment. Twelve samples are published, one is private, and one is incomplete. Re-running preserves edits and withdrawn consent. Sample addresses use `example.invalid` and cannot receive login email; sign in with your own inbox to browse them.
+
+```bash
+mkdir -p .data
+DATABASE_URL=file:./.data/epics-demo.sqlite pnpm db:migrate
+NODE_ENV=development EPICS_SEED_DEMO=1 DATABASE_URL=file:./.data/epics-demo.sqlite pnpm db:seed
+DATABASE_URL=file:./.data/epics-demo.sqlite pnpm dev
+```
+
+Choose 10 results per page to demonstrate pagination, or search `Demo Alumnus` and filter company `Demo Robotics`.
 
 ## Project Structure
 
@@ -136,26 +154,27 @@ Topic guides live in the [`docs/`](docs/) directory:
 
 ## Testing
 
-This template ships with a small **Vitest** testing baseline and an example component test,
-so every project starts with a working `pnpm test` command and a reference to copy from.
-
 ```bash
-pnpm test        # run all tests once
-pnpm test:watch  # re-run tests as you edit (Ctrl+C to stop)
+pnpm typecheck
+pnpm test
+pnpm lint
+pnpm build
+pnpm exec tsx scripts/verify-mvp.ts
+# Optional: also verify the development server and Vite asset protection
+pnpm exec tsx scripts/verify-mvp.ts --dev
 ```
 
-The baseline is intentionally self-contained: it needs **no `.env` file, no database, no real
-email, no browser installation, no dev server, and no customer data**. Clone, `pnpm install`,
-and `pnpm test` works immediately.
+The Vitest suites cover real SQLite profile and directory handlers, avatar filesystem safety, migration upgrades, seed guards, and mounted Nuxt components. `mvp-http.test.ts` uses real loopback HTTP and the installed Better Auth OTP/session implementation; only outbound email is mocked. It verifies failed delivery, retry, concurrency, expiry, replay, logout, onboarding, publication, and private-data restrictions. No test uses the application database or real email credentials. The suite needs permission to bind a local port. Font downloads are disabled for component tests.
 
-New to testing? The [**Testing guide**](docs/testing.md) walks a complete beginner through
-running, reading, writing, reviewing, and troubleshooting tests — and explains the expectation
-that merge requests include a meaningful test for changed behavior.
+`verify-mvp.ts` starts the built production server with its own temporary migrated SQLite file and private uploads. It checks real HTTP and server-rendered pages, redirects, profile persistence, directory filters/details, publication withdrawal, avatar authorization, static/optimizer blocking, and logout, then cleans up. It inserts known OTP records only in that disposable database; it does not verify SMTP, inbox delivery, or interactive browser layout. Run it after building the current code.
 
-CI runs `pnpm test` automatically on every pull request and on pushes to `dev`/`stage`/`prod`
-(see `.github/workflows/test.yml`), so a broken or missing test is visible before it merges.
+For the focused authentication regression:
 
-> Browser/end-to-end testing (Playwright) is intentionally kept separate from this template.
+```bash
+pnpm exec vitest run tests/nuxt/mvp-http.test.ts
+```
+
+Before release, also run the demonstration flow in desktop and mobile browsers and verify actual inbox delivery. The automated HTTP and component tests do not replace those checks. General testing guidance remains in [docs/testing.md](docs/testing.md).
 
 ## GitHub Actions Configuration
 

@@ -8,6 +8,7 @@ import { Socket } from 'node:net'
 import { Writable } from 'node:stream'
 import type { ReadStream } from 'node:fs'
 import Database from 'better-sqlite3'
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { eq } from 'drizzle-orm'
 import { createApp, createError, createEvent, eventHandler, toWebHandler } from 'h3'
@@ -37,9 +38,9 @@ beforeEach(async () => {
   await mkdir(root)
   vi.stubEnv('UPLOAD_STORAGE_PATH', root)
   sqlite = new Database(':memory:')
-  sqlite.exec(`CREATE TABLE user (id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL,
-    emailVerified INTEGER NOT NULL DEFAULT 0, image TEXT, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL)`)
+
   isolated.db = drizzle(sqlite, { schema })
+  migrate(isolated.db, { migrationsFolder: 'drizzle' })
   isolated.db.insert(schema.user).values([
     { id: 'first', name: 'First', email: 'first@example.test' },
     { id: 'owner', name: 'Owner', email: 'owner@example.test' },
@@ -214,4 +215,21 @@ describe('avatar handlers with real temporary storage and SQLite', () => {
     isolated.db.delete(schema.user).where(eq(schema.user.id, 'owner')).run()
     expect((await get()).status).toBe(404)
   })
+})
+
+
+it('serves avatars to others only while the owner has a completed published profile', async () => {
+  expect((await post(images.png)).status).toBe(201)
+  expect((await get('first')).status).toBe(404)
+  isolated.db.insert(schema.profile).values({ userId: 'owner', major: 'CS', graduationYear: 2026, directoryPublished: true }).run()
+  const published = await get('first')
+  expect(published.status).toBe(200)
+  expect(Buffer.from(await published.arrayBuffer())).toEqual(images.png)
+  isolated.db.update(schema.profile).set({ directoryPublished: false }).where(eq(schema.profile.userId, 'owner')).run()
+  expect((await get('first')).status).toBe(404)
+  const own = await get()
+  expect(own.status).toBe(200)
+  await own.arrayBuffer()
+  isolated.db.update(schema.profile).set({ directoryPublished: true, major: '' }).where(eq(schema.profile.userId, 'owner')).run()
+  expect((await get('first')).status).toBe(404)
 })

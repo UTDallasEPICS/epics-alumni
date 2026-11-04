@@ -27,3 +27,10 @@ logs
 /dev.db
 
 public/images/users/
+
+# Local SQLite databases and sidecars
+*.sqlite
+*.sqlite-*
+*.db-wal
+*.db-shm
+*.db-journal

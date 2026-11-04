@@ -4,19 +4,24 @@ import path from 'node:path'
 import { createError, defineEventHandler, getRouterParam, isError, sendStream, setHeader } from 'h3'
 import { fileTypeFromBuffer } from 'file-type'
 import { db } from '../../../utils/db'
-import { user } from '../../../db/schema'
+import { profile, user } from '../../../db/schema'
+import { publicationEligibility } from '../../../utils/publication'
+import { avatarReadRoots } from '../../../utils/avatar-storage'
 import { requireUser } from '../../../utils/session'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { AVATAR_MIME_TYPES, isAvatarStorageKey } from '../../../../shared/profile'
 
 export default defineEventHandler(async (event) => {
-  requireUser(event)
+  const currentUser = requireUser(event)
   const userId = getRouterParam(event, 'id')
   if (!userId) throw createError({ statusCode: 400, statusMessage: 'Missing userId' })
 
   let image: string | null | undefined
   try {
-    image = db.select({ image: user.image }).from(user).where(eq(user.id, userId)).get()?.image
+    image = currentUser.id === userId
+      ? db.select({ image: user.image }).from(user).where(eq(user.id, userId)).get()?.image
+      : db.select({ image: user.image }).from(user).innerJoin(profile, eq(profile.userId, user.id))
+        .where(and(eq(user.id, userId), publicationEligibility)).get()?.image
   } catch {
     throw createError({ statusCode: 500, statusMessage: 'Unable to load avatar' })
   }
@@ -27,7 +32,16 @@ export default defineEventHandler(async (event) => {
   // Trust the configured root, but reject symlinks in every component beneath it.
   const handle = await (async () => {
     try {
-      const root = await realpath(path.resolve(process.env.UPLOAD_STORAGE_PATH || 'public/images'))
+      // Prefer private storage; keep old uploads readable through this guarded
+      // endpoint without moving or deleting any existing files.
+      const roots = avatarReadRoots()
+      const selectedRoot = await (async () => {
+        for (const candidateRoot of roots) {
+          if (await lstat(path.join(candidateRoot, image)).then(() => true, () => false)) return candidateRoot
+        }
+        throw new Error('Missing avatar')
+      })()
+      const root = await realpath(selectedRoot)
       let candidate = root
       const parts = image.split('/')
       for (const [index, part] of parts.entries()) {

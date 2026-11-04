@@ -22,6 +22,7 @@ export const profile = sqliteTable('profile', {
   linkedinUrl: text('linkedinUrl'),
   githubUrl: text('githubUrl'),
   websiteUrl: text('websiteUrl'),
+  directoryPublished: integer('directoryPublished', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('createdAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 })

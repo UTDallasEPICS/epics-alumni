@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { avatarStorageRoot } from '../../utils/avatar-storage'
 import { constants } from 'node:fs'
 import { lstat, mkdir, open, realpath, unlink } from 'node:fs/promises'
 import { createError, defineEventHandler, readMultipartFormData, setResponseStatus } from 'h3'
@@ -31,7 +32,7 @@ export default defineEventHandler(async (event) => {
   let filePath: string | undefined
   let created: { dev: number; ino: number } | undefined
   try {
-    const configuredRoot = path.resolve(process.env.UPLOAD_STORAGE_PATH || 'public/images')
+    const configuredRoot = avatarStorageRoot()
     await mkdir(configuredRoot, { recursive: true })
     const root = await realpath(configuredRoot)
     let directory = root

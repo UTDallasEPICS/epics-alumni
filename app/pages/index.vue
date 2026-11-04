@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { authClient } from '../utils/auth-client'
-import {
-  profileUpdateSchema,
-  type ProfileResponse,
-} from '../../shared/profile'
+import { deriveOnboarding, isProfessionalUrl, professionalFields, profileUpdateSchema, type ProfileResponse } from '#shared/profile'
 
 type ProfileRole =
   | 'Alum'
@@ -23,6 +20,8 @@ interface Profile extends ProfileResponse {
   projects: ProfileProject[]
 }
 
+definePageMeta({ alias: ['/profile'] })
+const route = useRoute()
 const toast = useToast()
 
 const profile = ref<Profile | null>(null)
@@ -38,7 +37,36 @@ const form = reactive({
   email: '',
   graduationYear: '',
   biography: '',
+  major: '',
+  company: '',
+  jobTitle: '',
+  linkedinUrl: '',
+  githubUrl: '',
+  websiteUrl: '',
+  directoryPublished: false,
   projects: [] as ProfileProject[],
+})
+
+const canPublish = computed(() => deriveOnboarding(form).completed)
+watch(canPublish, (completed) => {
+  if (!completed) form.directoryPublished = false
+})
+
+const professionalInputs = [
+  { key: 'major', label: 'Major', max: 120 },
+  { key: 'company', label: 'Company', max: 160 },
+  { key: 'jobTitle', label: 'Job title', max: 160 },
+  { key: 'linkedinUrl', label: 'LinkedIn', max: 2048 },
+  { key: 'githubUrl', label: 'GitHub', max: 2048 },
+  { key: 'websiteUrl', label: 'Website', max: 2048 },
+] as const
+const onboardingLabels = { name: 'name', major: 'major', graduationYear: 'graduation year' }
+const professionalLinks = computed(() => {
+  const current = profile.value
+  if (!current) return []
+  return ([['linkedinUrl', 'LinkedIn'], ['githubUrl', 'GitHub'], ['websiteUrl', 'Website']] as const)
+    .filter(([field]) => isProfessionalUrl(current[field], field))
+    .map(([field, label]) => ({ label, href: current[field] }))
 })
 
 const roleClasses: Record<ProfileRole, string> = {
@@ -94,8 +122,12 @@ async function loadProfile() {
       roles: [],
       projects: [],
     }
+    if (!response.onboarding.completed && route.query.setup === '1') startEditing()
   } catch (error) {
-    console.error('Unable to load profile:', error)
+    if ((error as { statusCode?: number }).statusCode === 401) {
+      await navigateTo('/auth', { replace: true })
+      return
+    }
 
     errorMessage.value =
       error instanceof Error
@@ -107,8 +139,13 @@ async function loadProfile() {
 }
 
 async function logout() {
-  await authClient.signOut()
-  await navigateTo('/auth', { external: true })
+  try {
+    const result = await authClient.signOut()
+    if (result?.error) throw new Error('Sign out failed')
+    await navigateTo('/auth', { external: true })
+  } catch {
+    toast.add({ title: 'Unable to sign out', description: 'Please try again.', color: 'error' })
+  }
 }
 
 function startEditing() {
@@ -120,6 +157,8 @@ function startEditing() {
   form.email = profile.value.email
   form.graduationYear = profile.value.graduationYear
   form.biography = profile.value.biography
+  for (const field of professionalFields) form[field] = profile.value[field]
+  form.directoryPublished = profile.value.directoryPublished
   form.projects = copyProjects(profile.value.projects)
 
   selectedFile.value = null
@@ -233,6 +272,8 @@ async function saveProfile() {
     name: form.name,
     graduationYear: form.graduationYear,
     biography: form.biography,
+    directoryPublished: form.directoryPublished,
+    ...Object.fromEntries(professionalFields.map((field) => [field, form[field]])),
   })
 
   if (!parsed.success) {
@@ -278,8 +319,9 @@ async function saveProfile() {
 
     toast.add({
       title: 'Profile saved',
-      description:
-        'Your profile was updated successfully.',
+      description: profile.value.onboarding.completed
+        ? 'Your profile was updated successfully.'
+        : 'Your changes were saved. Complete your name, major, and graduation year to finish setup.',
       color: 'success',
     })
   } catch {
@@ -297,6 +339,9 @@ async function saveProfile() {
   }
 }
 
+watch(() => route.query.setup, (setup) => {
+  if (setup === '1' && profile.value && !profile.value.onboarding.completed && !isEditing.value) startEditing()
+})
 onMounted(loadProfile)
 </script>
 
@@ -329,18 +374,33 @@ onMounted(loadProfile)
         </div>
       </div>
 
-      <UAlert
-        v-else-if="errorMessage"
-        color="error"
-        variant="subtle"
-        title="Unable to load profile"
-        :description="errorMessage"
-      />
+      <section v-else-if="errorMessage" aria-label="Profile load error">
+        <UAlert
+          color="error"
+          variant="subtle"
+          title="Unable to load profile"
+          :description="errorMessage"
+        />
+        <UButton class="mt-3" @click="loadProfile">Retry profile</UButton>
+      </section>
 
       <article
         v-else-if="profile"
         class="profile-card"
       >
+        <section v-if="!profile.onboarding.completed" class="px-6 pt-6" aria-label="Profile setup" role="status">
+          <h2>Complete your profile</h2>
+          <p>Name, major, and graduation year are required to finish setup. You can save other changes at any time.</p>
+          <p>Still needed: {{ profile.onboarding.missingFields.map((field) => onboardingLabels[field]).join(', ') }}.</p>
+          <UButton v-if="!isEditing" class="mt-2" @click="startEditing">Complete profile</UButton>
+        </section>
+        <div v-if="profile.onboarding.completed" class="px-6 pt-6">
+          <NuxtLink to="/people" class="underline">Browse alumni</NuxtLink>
+        </div>
+        <p v-if="!isEditing" class="px-6 pt-3" role="status">
+          {{ profile.directoryPublished ? 'Your profile is visible in the alumni directory.' : 'Your profile is private. Edit your profile to choose directory visibility.' }}
+        </p>
+
         <header class="profile-header">
           <div class="identity-section">
             <div class="profile-avatar">
@@ -372,7 +432,7 @@ onMounted(loadProfile)
               class="identity-form"
             >
               <label class="field-label">
-                Full name
+                Full name (required for setup)
 
                 <UInput
                   v-model="form.name"
@@ -383,7 +443,7 @@ onMounted(loadProfile)
               </label>
 
               <label class="field-label">
-                Graduation year
+                Graduation year (required for setup)
 
                 <UInput
                   v-model="form.graduationYear"
@@ -433,6 +493,18 @@ onMounted(loadProfile)
             />
           </label>
 
+          <label v-for="field in professionalInputs" :key="field.key" class="field-label">
+            {{ field.label }}{{ field.key === 'major' ? ' (required for setup)' : '' }}
+            <UInput
+              v-model="form[field.key]"
+              :name="field.key"
+              :placeholder="field.label"
+              :maxlength="field.max"
+              size="xl"
+              class="w-full"
+            />
+          </label>
+
           <label class="field-label">
             Biography
 
@@ -467,6 +539,26 @@ onMounted(loadProfile)
               Selected: {{ selectedFile.name }}
             </p>
           </div>
+
+          <fieldset class="space-y-2" :disabled="isSaving">
+            <legend class="field-label">Directory visibility</legend>
+            <label class="flex items-start gap-3">
+              <input
+                v-model="form.directoryPublished"
+                type="checkbox"
+                name="directoryPublished"
+                :disabled="!canPublish"
+                aria-describedby="publication-help"
+                class="mt-1"
+              />
+              Make my completed profile visible to signed-in EPICS members
+            </label>
+            <p id="publication-help" class="text-sm text-gray-600">
+              This shares your name, photo, education, professional information, biography, and links. Your email stays private.
+              Uncheck and save to hide your profile. Clearing a required setup field also hides it; publishing again requires a new opt-in.
+            </p>
+            <p v-if="!canPublish" class="text-sm">Complete your name, major, and graduation year to enable publication.</p>
+          </fieldset>
 
           <section class="project-editor">
             <p class="text-gray-500">
@@ -597,6 +689,15 @@ onMounted(loadProfile)
             >
               No roles have been assigned.
             </p>
+
+            <dl class="my-4 grid gap-3 sm:grid-cols-3">
+              <div v-if="profile.major"><dt>Major</dt><dd>{{ profile.major }}</dd></div>
+              <div v-if="profile.company"><dt>Company</dt><dd>{{ profile.company }}</dd></div>
+              <div v-if="profile.jobTitle"><dt>Job title</dt><dd>{{ profile.jobTitle }}</dd></div>
+            </dl>
+            <div v-if="professionalLinks.length" class="my-4 flex flex-wrap gap-4" aria-label="Professional links">
+              <a v-for="link in professionalLinks" :key="link.label" :href="link.href" target="_blank" rel="noopener noreferrer" class="underline">{{ link.label }}</a>
+            </div>
 
             <p class="biography">
               {{

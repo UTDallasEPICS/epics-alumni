@@ -1,5 +1,9 @@
 <script setup lang="ts">
   const route = useRoute()
+  const search = ref('')
+  async function searchAlumni() {
+    await navigateTo({ path: '/people', query: { q: search.value.trim(), page: '1' } })
+  }
 </script>
 
 <template>
@@ -10,11 +14,11 @@
     </NuxtLink>
 
     <!-- Search -->
-    <div class="search">
-      <span class="search-icon">⌕</span>
+    <form class="search" role="search" @submit.prevent="searchAlumni">
+      <button type="submit" class="search-icon" aria-label="Search alumni">⌕</button>
 
-      <input type="text" placeholder="Search" />
-    </div>
+      <input v-model="search" type="search" placeholder="Search alumni" aria-label="Alumni name" maxlength="100" />
+    </form>
 
     <!-- Navigation Icons -->
     <div class="nav-icons">
@@ -34,34 +38,19 @@
       </NuxtLink>
 
       <!-- Projects -->
-      <NuxtLink
-        to="/projects"
-        class="nav-link"
-        :class="{ active: route.path.startsWith('/projects') }"
-        aria-label="Projects"
-      >
+      <span class="nav-link opacity-50" aria-label="Projects" aria-disabled="true" title="Projects are not available yet">
         <span class="icon projects-icon"></span>
-      </NuxtLink>
+      </span>
 
       <!-- Messages -->
-      <NuxtLink
-        to="/messages"
-        class="nav-link"
-        :class="{ active: route.path.startsWith('/messages') }"
-        aria-label="Messages"
-      >
+      <span class="nav-link opacity-50" aria-label="Messages" aria-disabled="true" title="Messages are not available yet">
         <span class="icon chat-icon"></span>
-      </NuxtLink>
+      </span>
 
       <!-- Notifications -->
-      <NuxtLink
-        to="/notifications"
-        class="nav-link"
-        :class="{ active: route.path.startsWith('/notifications') }"
-        aria-label="Notifications"
-      >
+      <span class="nav-link opacity-50" aria-label="Notifications" aria-disabled="true" title="Notifications are not available yet">
         <span class="icon notification-icon"></span>
-      </NuxtLink>
+      </span>
 
       <!-- Profile -->
       <NuxtLink
@@ -244,5 +233,11 @@
       width: 28px;
       height: 28px;
     }
+  }
+  @media (max-width: 640px) {
+    .navbar { height: auto; min-height: 86px; flex-wrap: wrap; padding: 16px; gap: 16px; }
+    .nav-icons { gap: 12px; }
+    .icon { width: 24px; height: 24px; }
+    .search { order: 3; flex-basis: 100%; max-width: none; }
   }
 </style>

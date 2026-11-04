@@ -1,4 +1,5 @@
-import { auth } from '~~/server/utils/auth'
+import { createError, defineEventHandler } from 'h3'
+import { auth } from '../utils/auth'
 
 // API paths that must stay reachable without a session. Better Auth's own
 // endpoints (sign-in, email OTP, get-session, etc.) live under /api/auth.
