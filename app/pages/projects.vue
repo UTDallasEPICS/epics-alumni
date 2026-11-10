@@ -157,7 +157,7 @@
         <UCard
           v-for="project in filteredProjects"
           :key="project.id"
-          class="hover:ring-primary cursor-pointer transition hover:bg-[#D9D9D9] hover:ring-3"
+          class="hover:ring-primary cursor-pointer transition hover:bg-[#D9D9D9] hover:ring-3 dark:hover:bg-[#273543]"
           @click="openProject(project)"
         >
           <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -170,7 +170,7 @@
             </UBadge>
           </div>
 
-          <h2 class="mb-2 text-lg font-semibold">
+          <h2 class="mb-2 text-lg font-semibold dark:text-gray-300">
             {{ project.projectTitle }}
           </h2>
 
@@ -178,7 +178,7 @@
             {{ project.projectCategory }}
           </p>
 
-          <p class="text-sm leading-6">
+          <p class="text-sm leading-6 dark:text-gray-300">
             {{ project.description }}
           </p>
         </UCard>
