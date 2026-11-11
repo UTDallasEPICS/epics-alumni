@@ -1,7 +1,6 @@
 <script setup lang="ts">
-  import type { DropdownMenuItem } from "@nuxt/ui"
+  import type { DropdownMenuItem } from '@nuxt/ui'
   import { useInfiniteScroll } from '@vueuse/core'
-
 
   interface Project {
     id: string
@@ -17,18 +16,23 @@
   const skip = ref(0)
 
   // Fetch project data from the backend API.
-  const { data, status, error } = await useLazyFetch<Project[]>('/api/projects', {key: 'projects-infinite-scroll', query: {skip}})
+  const { data, status, error } = await useLazyFetch<Project[]>('/api/projects', {
+    key: 'projects-infinite-scroll',
+    query: { skip },
+  })
 
   const projects = ref<Project[]>([])
 
   // Appends new page
-  watch(data, (page) => {
-    if (!page) return
-    projects.value = [...projects.value, ...page]
-    hasMore.value = page.length === pageSize
-  },
-  { immediate: true }
-)
+  watch(
+    data,
+    (page) => {
+      if (!page) return
+      projects.value = [...projects.value, ...page]
+      hasMore.value = page.length === pageSize
+    },
+    { immediate: true }
+  )
 
   onMounted(() => {
     useInfiniteScroll(
@@ -81,10 +85,20 @@
   // Track selected semester in dropdown.
   const selectedSemester = ref('All Semesters')
 
-  // Build dropdown options from semesters returned by API.
+  // Converts "Fall 2025" -> 20250825
+  // "Spring 2026" -> 20260101 so semesters sort by date.
+  // Fall starts Aug 25, Spring starts Jan 1.
+  function semesterDate(semester: string): number {
+    const [term, year] = semester.split(' ')
+    return Number(year) * 10000 + (term === 'Spring' ? 101 : 825)
+  }
+
+  // Build dropdown options from semesters returned by API, newest first.
   const semesters = computed(() => [
     'All Semesters',
-    ...new Set((projects.value ?? []).map((project) => project.semester)),
+    ...[...new Set((projects.value ?? []).map((project) => project.semester))].sort(
+      (a, b) => semesterDate(b) - semesterDate(a)
+    ),
   ])
 
   const items = computed<DropdownMenuItem[]>(() =>
@@ -151,7 +165,7 @@
 
     <template v-else>
       <!-- Number of matching projects. -->
-      <p class="mb-4 text-sm text-gray-500">{{ filteredProjects.length }} projects</p>      
+      <p class="mb-4 text-sm text-gray-500">{{ filteredProjects.length }} projects</p>
       <!-- Project cards. -->
       <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <UCard
