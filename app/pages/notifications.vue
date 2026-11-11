@@ -5,23 +5,29 @@
 
   const open = ref(false)
   const notificationMessage = ref('')
+  type Notification = NonNullable<typeof notifications.value>[number]
 
+  const selected = ref<Notification | null>(null) // the announcement being inspected
+  const selectedFile = ref<File | null>(null)
+
+  function onFileChange(e: Event) {
+    selectedFile.value = (e.target as HTMLInputElement).files?.[0] ?? null
+  }
   async function createNotification() {
     try {
-      await $fetch('/api/notifications' as string, {
-        method: 'POST',
-        body: {
-          createdBy: 'okiWNIbQupCDYEQeqttnYtSu5asGtvWf',
-          message: notificationMessage.value,
-          timestamp: new Date().toISOString(),
-        },
-      })
-      await refresh() // reload the list so the new announcement appears
+      const formData = new FormData()
+      formData.append('createdBy', 'okiWNIbQupCDYEQeqttnYtSu5asGtvWf')
+      formData.append('message', notificationMessage.value)
+      if (selectedFile.value) formData.append('image', selectedFile.value)
+
+      await $fetch('/api/notifications', { method: 'POST', body: formData })
+      await refresh()
       open.value = false
     } catch (error) {
       console.error('Failed to save announcement', error)
     } finally {
       notificationMessage.value = ''
+      selectedFile.value = null
     }
   }
 
@@ -39,13 +45,27 @@
       <div class="modal-content">
         <h2>Add Announcement</h2>
         <input v-model="notificationMessage" placeholder="Enter announcement message" />
+        <input type="file" accept="image/*" @change="onFileChange" />
         <button @click="createNotification">Save</button>
         <button @click="open = false">Cancel</button>
       </div>
     </div>
+    <div v-if="selected" class="overlay" @click.self="selected = null">
+      <div class="modal-content">
+        <h2>Announcement</h2>
+        <img v-if="selected.image" :src="selected.image" alt="" class="inspect-image" />
+        <p>{{ selected.message }}</p>
+        <button @click="selected = null">Close</button>
+      </div>
+    </div>
     <div class="stack">
-      <div v-for="notification in notifications" :key="notification.id" class="box">
-        <button class="delete" @click="deleteNotification(notification.id)">Delete</button>
+      <div
+        v-for="notification in notifications"
+        :key="notification.id"
+        class="box"
+        @click="selected = notification"
+      >
+        <button class="delete" @click.stop="deleteNotification(notification.id)">Delete</button>
         <p>{{ notification.message }}</p>
       </div>
     </div>
@@ -108,5 +128,10 @@
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
+  }
+  .inspect-image {
+    max-width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
   }
 </style>

@@ -1,11 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-<<<<<<< HEAD
-  "id": "fdcfd5c0-8f6e-4394-9a16-d9bea65f1f65",
-=======
-  "id": "b309db32-2663-4a5c-bbbb-3f8e1bd600a6",
->>>>>>> 1a6ccf0e292264b213d54af35b9542e574212ea5
+  "id": "a44ee4d9-6b36-4c29-800a-d1278610db40",
   "prevId": "f1d6cea8-3bcb-4366-bee5-b05b8363a6d1",
   "tables": {
     "account": {
@@ -131,13 +127,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-<<<<<<< HEAD
     "announcements": {
       "name": "announcements",
-=======
-    "project": {
-      "name": "project",
->>>>>>> 1a6ccf0e292264b213d54af35b9542e574212ea5
       "columns": {
         "id": {
           "name": "id",
@@ -146,22 +137,72 @@
           "notNull": true,
           "autoincrement": false
         },
-<<<<<<< HEAD
         "createdBy": {
           "name": "createdBy",
-=======
-        "projectTitle": {
-          "name": "projectTitle",
->>>>>>> 1a6ccf0e292264b213d54af35b9542e574212ea5
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-<<<<<<< HEAD
         "message": {
           "name": "message",
-=======
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "announcements_createdBy_user_id_fk": {
+          "name": "announcements_createdBy_user_id_fk",
+          "tableFrom": "announcements",
+          "tableTo": "user",
+          "columnsFrom": [
+            "createdBy"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "project": {
+      "name": "project",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "projectTitle": {
+          "name": "projectTitle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "semester": {
           "name": "semester",
           "type": "text",
@@ -185,7 +226,6 @@
         },
         "description": {
           "name": "description",
->>>>>>> 1a6ccf0e292264b213d54af35b9542e574212ea5
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -207,25 +247,7 @@
         }
       },
       "indexes": {},
-<<<<<<< HEAD
-      "foreignKeys": {
-        "announcements_createdBy_user_id_fk": {
-          "name": "announcements_createdBy_user_id_fk",
-          "tableFrom": "announcements",
-          "tableTo": "user",
-          "columnsFrom": [
-            "createdBy"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-=======
       "foreignKeys": {},
->>>>>>> 1a6ccf0e292264b213d54af35b9542e574212ea5
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}

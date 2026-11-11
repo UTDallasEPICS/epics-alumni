@@ -11,6 +11,7 @@ export default defineEventHandler(async (event) => {
       message: announcments.message,
       createdAt: announcments.createdAt,
       updatedAt: announcments.updatedAt,
+      image: announcments.image,
     })
     .from(announcments)
 

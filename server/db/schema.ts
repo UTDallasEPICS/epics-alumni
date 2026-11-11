@@ -115,6 +115,7 @@ export const announcments = sqliteTable('announcements', {
   updatedAt: integer('updatedAt', { mode: 'timestamp' })
     .notNull()
     .$defaultFn(() => new Date()),
+  image: text('image'),
 })
 export const project = sqliteTable('project', {
   id: text('id')

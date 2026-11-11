@@ -12,13 +12,15 @@
     {
       "idx": 1,
       "version": "6",
-<<<<<<< HEAD
-      "when": 1792270194576,
-      "tag": "0001_colorful_mysterio",
-=======
-      "when": 1790804536795,
-      "tag": "0001_secret_bloodstorm",
->>>>>>> 1a6ccf0e292264b213d54af35b9542e574212ea5
+      "when": 1794432201251,
+      "tag": "0001_charming_sharon_carter",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794432286043,
+      "tag": "0002_rapid_lester",
       "breakpoints": true
     }
   ]
