@@ -15,34 +15,6 @@
   const pageSize = 15
   const hasMore = ref(true)
   const skip = ref(0)
-
-  // Fetch project data from the backend API.
-  const { data, status, error } = await useLazyFetch<Project[]>('/api/projects', {key: 'projects-infinite-scroll', query: {skip}})
-
-  const projects = ref<Project[]>([])
-
-  // Appends new page
-  watch(data, (page) => {
-    if (!page) return
-    projects.value = [...projects.value, ...page]
-    hasMore.value = page.length === pageSize
-  },
-  { immediate: true }
-)
-
-  onMounted(() => {
-    useInfiniteScroll(
-      window,
-      () => {
-        skip.value += pageSize
-      },
-      {
-        distance: 200,
-        canLoadMore: () => hasMore.value && status.value !== 'pending',
-      }
-    )
-  })
-
   // Shared search state used by the navbar.
   const route = useRoute()
   const { searchQuery } = useProjectSearch()
@@ -57,38 +29,50 @@
       searchQuery.value = typeof value === 'string' ? value : ''
     }
   )
+  // Track selected semester in dropdown.
+  const selectedSemester = ref('All Semesters')
+  // Text from the search is trimmed for spaces and this is the value sent to the backend API
+  const searchParam = computed(() => searchQuery.value.trim() || undefined)
+  const semesterParam = computed(() => selectedSemester.value === 'All Semesters' ? undefined : selectedSemester.value,)
 
-  // Filter projects by title, category, description, semester, or status.
-  const searchedProjects = computed(() => {
-    const query = searchQuery.value.trim().toLowerCase()
-    const allProjects = projects.value ?? []
+  // Fetch project data from the backend API.
+  const { data, status, error } = await useLazyFetch<Project[]>('/api/projects', {key: 'projects-infinite-scroll', query: {skip, search: searchParam, semester: semesterParam}})
 
-    if (!query) {
-      return allProjects
-    }
+  const projects = ref<Project[]>([])
 
-    return allProjects.filter((project) =>
-      [
-        project.projectTitle,
-        project.projectCategory,
-        project.description,
-        project.semester,
-        project.status,
-      ].some((field) => field.toLowerCase().includes(query))
+  // Appends new page
+  watch(data, (page) => {
+    if (!page) return
+    projects.value = skip.value === 0 ? [...page] : [...projects.value, ...page]
+    hasMore.value = page.length === pageSize
+  },
+  { immediate: true }
+)
+  // When search or semester changes return to page one so skips correct rows
+  watch([searchParam, semesterParam], () => {
+    skip.value = 0
+    hasMore.value = true
+  },
+  { flush: 'sync' })
+
+  // Trigger for the infinite scroll
+  onMounted(() => {
+    useInfiniteScroll(
+      window,
+      () => {
+        skip.value += pageSize
+      },
+      {
+        distance: 200,
+        canLoadMore: () => hasMore.value && status.value !== 'pending',
+      }
     )
   })
 
-  // Track selected semester in dropdown.
-  const selectedSemester = ref('All Semesters')
-
-  // Build dropdown options from semesters returned by API.
-  const semesters = computed(() => [
-    'All Semesters',
-    ...new Set((projects.value ?? []).map((project) => project.semester)),
-  ])
-
+  // Options for the semester dropdown based on the list from the backend API
+  const {data: semesterList} = await useFetch<string[]>('/api/projects/semester')
   const items = computed<DropdownMenuItem[]>(() =>
-    semesters.value.map((semester) => ({
+    ['All Semesters', ...(semesterList.value ?? [])].map((semester) => ({
       label: semester,
       onSelect: () => {
         selectedSemester.value = semester
@@ -96,14 +80,6 @@
     }))
   )
 
-  // Apply both search and semester filters.
-  const filteredProjects = computed(() => {
-    if (selectedSemester.value === 'All Semesters') {
-      return searchedProjects.value
-    }
-
-    return searchedProjects.value.filter((project) => project.semester === selectedSemester.value)
-  })
 
   // Track project details modal.
   const open = ref(false)
@@ -143,7 +119,7 @@
     <p v-else-if="error" class="text-red-500">Unable to load projects. Please try again.</p>
 
     <!-- Empty search/filter state. -->
-    <p v-else-if="filteredProjects.length === 0">
+    <p v-else-if="projects.length === 0">
       No projects found<span v-if="searchQuery.trim()"> matching "{{ searchQuery.trim() }}"</span
       ><span v-if="selectedSemester !== 'All Semesters'"> for {{ selectedSemester }}</span
       >.
@@ -151,13 +127,13 @@
 
     <template v-else>
       <!-- Number of matching projects. -->
-      <p class="mb-4 text-sm text-gray-500">{{ filteredProjects.length }} projects</p>      
+      <p class="mb-4 text-sm text-gray-500">{{ projects.length }} projects</p>      
       <!-- Project cards. -->
       <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <UCard
-          v-for="project in filteredProjects"
+          v-for="project in projects"
           :key="project.id"
-          class="hover:ring-primary cursor-pointer transition hover:bg-[#D9D9D9] hover:ring-3"
+          class="hover:ring-primary cursor-pointer transition hover:bg-[#D9D9D9] hover:ring-3 dark:hover:bg-[#273543]"
           @click="openProject(project)"
         >
           <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -170,7 +146,7 @@
             </UBadge>
           </div>
 
-          <h2 class="mb-2 text-lg font-semibold">
+          <h2 class="mb-2 text-lg font-semibold dark:text-gray-300">
             {{ project.projectTitle }}
           </h2>
 
@@ -178,7 +154,7 @@
             {{ project.projectCategory }}
           </p>
 
-          <p class="text-sm leading-6">
+          <p class="text-sm leading-6 dark:text-gray-300">
             {{ project.description }}
           </p>
         </UCard>
