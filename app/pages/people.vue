@@ -18,7 +18,7 @@
 </script>
 
 <template>
-    <div class="px-8 py-7 md:px-40">
+    <div class="min-h-screen bg-[#f3f2ef] px-8 py-7 md:px-40">
         <h1 class="mb-2 text-2xl font-bold">Profiles</h1>
         <div class="mb-6 flex items-center gap-3">
         <!-- Filter profile by type. -->
