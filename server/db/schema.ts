@@ -101,6 +101,22 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
 }))
 
+export const announcments = sqliteTable('announcements', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  createdBy: text('createdBy')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  message: text('message').notNull(),
+  createdAt: integer('createdAt', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updatedAt', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  image: text('image'),
+})
 export const project = sqliteTable('project', {
   id: text('id')
     .primaryKey()
@@ -118,6 +134,7 @@ export const project = sqliteTable('project', {
     .$defaultFn(() => new Date()),
 })
 
+export const selectAnnouncementSchema = createSelectSchema(announcments)
 export const selectProjectSchema = createSelectSchema(project)
 export const insertProjectSchema = createInsertSchema(project)
 export const selectUserSchema = createSelectSchema(user)
